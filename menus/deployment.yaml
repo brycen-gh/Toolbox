@@ -1,43 +1,76 @@
 title: Deployment
 
 menu:
-  - label: Home
-    icon: 🏠
-    content: |
-      Welcome to the GG Training Toolbox!
-      Here we have a collection of useful scripts and tools.
-
-  # ---------- Double nesting level ----------
-  - label: Docker Prep
+  - label: Deployment
     icon: 🚀
+    content: |
+      Here we have a collection of useful scripts used to deploy a collection of useful tools. 
+      Unfortunately, this script will require internet access the first time you run it.
+      At least until the containers are downloaded, the toolbox will not work offline.
+
+      If you wanna be lazy and run each of these scripts. Run this.
+    action: |
+      import time
+      print("Deploying to STAGING...")
+      print("Installing Docker...")
+      time.sleep(4)
+      print("Installing Portainer...")
+
+
+
+  - label: Prep Install
+    icon: 💻
     children:
+
       - label: Install Docker
-        action: print("Deploying to STAGING...")
-        content: Deploys the current build to the staging environment.
+        action: scripts/example.py
+        content: Create required user and group for Docker, then install Docker and Docker Compose on your system. 
 
-      - label: Install Portainer
-        action: print("Deploying to PRODUCTION...")
-        content: Deploys the current build to production (use with care).
-
-
-  - label: Container Administration
-    icon: 📜
-    children:
-      - label: Update Containers
-        action: print("Updating containers...")
-        content: Run a simple print statement.
 
       - label: Install Portainer
         action: scripts/example.py
-        content: Executed scripts/example.py
+        content: (Optional) Install Portainer, a web-based management tool for Docker. This will allow you to manage your containers through a web interface on port 9000.
 
-      - label: List current directory
-        action: |
-          import os
-          print("Current directory contents:")
-          for f in os.listdir("."):
-              print(" -", f)
-        content: Listed files in the current folder.
+
+      - label: Update Containers
+        action: print("Updating containers...")
+                docker
+
+        content: |
+                Download or Update the local containers.
+                This will pull the latest version of the containers from Docker Hub and update them on your local machine.
+                These containers will be downloaded to the ./repos/containers folder and will be used to run the tools in the toolbox.
+
+
+
+
+
+      - label: Install Containers
+        content: |
+                This will install the containers required to run the toolbox.
+                These are the containers downloaded to the ./repos/containers folder.
+                Click each of the buttons below to install the containers.
+
+        children:
+          - label: Install Docker
+            action: scripts/example.py
+            content: Create required user and group for Docker, then install Docker and Docker Compose on your system. 
+
+
+
+
+  - label: Containers
+    icon: 🐳
+
+    children:
+      - label: Install Docker Containers
+        content: Deploys the current build to the staging environment.
+        action: print("Deploying to STAGING...")
+
+
+
+
+
 
 
   - label: Settings

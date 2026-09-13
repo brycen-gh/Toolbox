@@ -11,8 +11,8 @@ import copy
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-VARIABLES_FILE = Path("variables.yaml")
-MENUS_DIR = Path("menus")          # ← all menu YAMLs live here
+MENUS_DIR = Path("menus")
+HOME_YAML = MENUS_DIR / "home.yaml"
 
 class YamlMenuApp(ctk.CTk):
     def __init__(self):
@@ -22,35 +22,23 @@ class YamlMenuApp(ctk.CTk):
         self.geometry("1100x750")
         self.minsize(900, 600)
 
-        # Make sure the menus folder exists
         MENUS_DIR.mkdir(exist_ok=True)
 
-        # Find available menu YAML files and their titles
         self.yaml_map = self.find_yaml_files()
         self.available_titles = list(self.yaml_map.keys())
 
-        # Choose starting file
-        if "My Tools" in self.yaml_map:
-            self.current_title = "My Tools"
-        elif self.available_titles:
-            self.current_title = self.available_titles[0]
-        else:
-            self.current_title = None
-
-        self.current_yaml = self.yaml_map.get(self.current_title) if self.current_title else None
-
-        self.menu_data = self.load_yaml(self.current_yaml) if self.current_yaml else {"title": "No YAML", "menu": []}
-        self.title(self.menu_data.get("title", "YAML Menu"))
+        self.current_title = None
+        self.current_yaml = None          # full path to the currently loaded menu YAML
+        self.menu_data = {"title": "Home", "menu": []}
 
         self.current_item = None
         self.sidebar_expanded = True
         self.sidebar_width = 260
         self.expanded_items = set()
 
-        # Variables state
+        # Variables that belong to the *currently loaded* YAML
         self.variables = {}
-        self.default_variables = {}
-        self.load_variables()
+        self.default_variables = {}       # snapshot when the YAML was loaded
 
         # ==================== LAYOUT ====================
         self.grid_columnconfigure(1, weight=1)
@@ -60,7 +48,7 @@ class YamlMenuApp(ctk.CTk):
         self.sidebar = ctk.CTkFrame(self, width=self.sidebar_width, corner_radius=0)
         self.sidebar.grid(row=0, column=0, sticky="nsew")
         self.sidebar.grid_propagate(False)
-        self.sidebar.grid_rowconfigure(2, weight=1)
+        self.sidebar.grid_rowconfigure(3, weight=1)
 
         self.toggle_btn = ctk.CTkButton(
             self.sidebar, text="☰", width=40, height=40,
@@ -69,24 +57,32 @@ class YamlMenuApp(ctk.CTk):
         )
         self.toggle_btn.grid(row=0, column=0, padx=10, pady=(15, 5), sticky="w")
 
-        # Dropdown shows the nice title from inside the YAML
+        self.home_btn = ctk.CTkButton(
+            self.sidebar,
+            text="🏠  Home",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            height=36,
+            fg_color="#3498db",
+            hover_color="#2980b9",
+            command=self.open_home
+        )
+        self.home_btn.grid(row=1, column=0, padx=15, pady=(5, 8), sticky="ew")
+
         self.yaml_dropdown = ctk.CTkOptionMenu(
             self.sidebar,
-            values=self.available_titles or ["No YAML files found"],
+            values=["Select file ⬇️"] + (self.available_titles or []),
             command=self.on_yaml_selected,
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=13),
             width=200,
             height=32
         )
-        self.yaml_dropdown.grid(row=1, column=0, padx=15, pady=(5, 10), sticky="ew")
-        if self.current_title:
-            self.yaml_dropdown.set(self.current_title)
+        # only shown on Home
 
         self.menu_frame = ctk.CTkScrollableFrame(self.sidebar, fg_color="transparent")
-        self.menu_frame.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+        self.menu_frame.grid(row=3, column=0, sticky="nsew", padx=10, pady=10)
         self.menu_frame.grid_columnconfigure(0, weight=1)
 
-        # ---------- Main content area ----------
+        # ---------- Main content ----------
         self.content_frame = ctk.CTkFrame(self, corner_radius=0, fg_color=("gray95", "gray13"))
         self.content_frame.grid(row=0, column=1, sticky="nsew")
         self.content_frame.grid_columnconfigure(0, weight=1)
@@ -99,92 +95,132 @@ class YamlMenuApp(ctk.CTk):
         self.build_variables_view()
 
         self.show_normal_view()
-        self.refresh_menu()
+        self.open_home()
 
     # ------------------------------------------------------------------
-    # YAML file handling
+    # Home
+    # ------------------------------------------------------------------
+    def open_home(self):
+        self.current_title = None
+        self.current_yaml = None
+        self.expanded_items.clear()
+        self.current_item = None
+        self.variables = {}
+        self.default_variables = {}
+
+        for widget in self.menu_frame.winfo_children():
+            widget.destroy()
+
+        self.show_normal_view()
+
+        self.yaml_dropdown.grid(row=2, column=0, padx=15, pady=(0, 10), sticky="ew")
+        self.yaml_dropdown.set("Select file ⬇️")
+
+        if not HOME_YAML.exists():
+            self.title("Home – File Missing")
+            self.page_title.configure(text="Home")
+            self.summary_text.configure(state="normal")
+            self.summary_text.delete("1.0", "end")
+            self.summary_text.insert(
+                "1.0",
+                f"ERROR: Could not find the home page file.\n\n"
+                f"Expected location:\n{HOME_YAML.resolve()}\n\n"
+                f"Please create menus/home.yaml to customize this page."
+            )
+            self.summary_text.configure(state="disabled")
+        else:
+            home_data = self.load_yaml(HOME_YAML)
+            self.title(home_data.get("title", "Home"))
+
+            items = home_data.get("menu", [])
+            home_item = None
+            for item in items:
+                if item.get("label", "").lower() in ("home", "dashboard", "welcome"):
+                    home_item = item
+                    break
+            if home_item is None and items:
+                home_item = items[0]
+
+            if home_item:
+                label = home_item.get("label", "Home")
+                content = home_item.get("content", "No content defined in home.yaml")
+            else:
+                label = "Home"
+                content = (
+                    "menus/home.yaml was found but it contains no menu items.\n\n"
+                    "Add at least one item under the 'menu:' key."
+                )
+
+            self.page_title.configure(text=label)
+            self.summary_text.configure(state="normal")
+            self.summary_text.delete("1.0", "end")
+            self.summary_text.insert("1.0", content)
+            self.summary_text.configure(state="disabled")
+
+        self.play_button.grid_remove()
+        self.output_label.grid_remove()
+        self.output_text.grid_remove()
+
+        self.summary_text.configure(height=400)
+        self.normal_view.grid_rowconfigure(2, weight=1)
+        self.summary_text.grid(row=2, column=0, padx=30, pady=(5, 25), sticky="nsew")
+
+    # ------------------------------------------------------------------
+    # YAML discovery & loading
     # ------------------------------------------------------------------
     def find_yaml_files(self):
-        """
-        Scan the ./menus folder for .yaml / .yml files and return:
-        { "Title from inside YAML": "menus/filename.yaml", ... }
-        """
         result = {}
         if not MENUS_DIR.exists():
             return result
 
         for pattern in ("*.yaml", "*.yml"):
             for f in MENUS_DIR.glob(pattern):
+                if f.name.lower() == "home.yaml":
+                    continue
                 try:
                     with open(f, "r", encoding="utf-8") as file:
                         data = yaml.safe_load(file) or {}
                     title = data.get("title", f.stem)
-                    # avoid duplicate titles
-                    original_title = title
+                    original = title
                     counter = 1
                     while title in result:
-                        title = f"{original_title} ({counter})"
+                        title = f"{original} ({counter})"
                         counter += 1
-                    result[title] = str(f)          # store full relative path
+                    result[title] = str(f)
                 except Exception:
                     result[f.stem] = str(f)
         return result
 
     def on_yaml_selected(self, selected_title: str):
-        """Called when user picks a different YAML from the dropdown."""
-        if selected_title == self.current_title:
+        if selected_title == "Select file ⬇️" or selected_title == self.current_title:
             return
 
         self.current_title = selected_title
         self.current_yaml = self.yaml_map.get(selected_title)
-
         if not self.current_yaml:
             return
 
-        self.menu_data = self.load_yaml(self.current_yaml)
-        self.title(self.menu_data.get("title", "YAML Menu"))
+        self.yaml_dropdown.grid_remove()
 
-        # Reset expansion state
+        data = self.load_yaml(self.current_yaml)
+        self.menu_data = data
+        self.title(data.get("title", "YAML Menu"))
+
+        # Load Variables that belong to THIS yaml
+        self.variables = data.get("Variables", {}) or {}
+        self.default_variables = copy.deepcopy(self.variables)
+
         self.expanded_items.clear()
         self.current_item = None
-
         self.refresh_menu()
 
-        # ----- Open the "Home" page -----
-        # Look for a top-level item that is clearly the home/dashboard
-        home_item = None
-        menu_items = self.menu_data.get("menu", [])
-
-        for item in menu_items:
-            label = item.get("label", "").lower()
-            if label in ("dashboard", "home", "welcome", "main"):
-                home_item = item
-                break
-
-        # Fallback: just take the first top-level item
-        if home_item is None and menu_items:
-            home_item = menu_items[0]
-
-        if home_item:
-            # If the home item is a category, expand it and show its content
-            if home_item.get("children"):
-                # Find its item_id (first top-level item is always "0")
-                self.on_category_click(home_item, "0")
-            else:
-                self.on_item_click(home_item)
-        else:
-            # No items at all – show empty state
-            self.show_normal_view()
-            self.page_title.configure(text="Select a script")
-            self.summary_text.configure(state="normal")
-            self.summary_text.delete("1.0", "end")
-            self.summary_text.insert("1.0", "This menu is empty.")
-            self.summary_text.configure(state="disabled")
-            self.output_text.configure(state="normal")
-            self.output_text.delete("1.0", "end")
-            self.output_text.insert("1.0", "")
-            self.output_text.configure(state="disabled")
-            self.set_play_button_enabled(False)
+    def load_yaml(self, path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return yaml.safe_load(f) or {"title": "Empty", "menu": []}
+        except Exception as e:
+            print(f"Error loading YAML: {e}")
+            return {"title": "Error", "menu": []}
 
     # ------------------------------------------------------------------
     # Views
@@ -193,7 +229,7 @@ class YamlMenuApp(ctk.CTk):
         self.normal_view.grid_columnconfigure(0, weight=1)
 
         self.page_title = ctk.CTkLabel(
-            self.normal_view, text="Select a script",
+            self.normal_view, text="Home",
             font=ctk.CTkFont(size=22, weight="bold")
         )
         self.page_title.grid(row=0, column=0, padx=30, pady=(25, 5), sticky="w")
@@ -208,7 +244,7 @@ class YamlMenuApp(ctk.CTk):
             self.normal_view, height=90, font=ctk.CTkFont(size=14), wrap="word"
         )
         self.summary_text.grid(row=2, column=0, padx=30, pady=(5, 15), sticky="ew")
-        self.summary_text.insert("1.0", "Select a script from the left menu.")
+        self.summary_text.insert("1.0", "Loading...")
         self.summary_text.configure(state="disabled")
 
         self.play_button = ctk.CTkButton(
@@ -230,7 +266,7 @@ class YamlMenuApp(ctk.CTk):
             self.normal_view, font=ctk.CTkFont(size=13, family="Consolas"), wrap="word"
         )
         self.output_text.grid(row=5, column=0, padx=30, pady=(5, 25), sticky="nsew")
-        self.output_text.insert("1.0", "Select a script from the left menu.")
+        self.output_text.insert("1.0", "")
         self.output_text.configure(state="disabled")
 
         self.normal_view.grid_rowconfigure(5, weight=1)
@@ -270,24 +306,14 @@ class YamlMenuApp(ctk.CTk):
         self.refresh_variables_list()
 
     # ------------------------------------------------------------------
-    # Variables logic
+    # Variables (now per-YAML)
     # ------------------------------------------------------------------
-    def load_variables(self):
-        if VARIABLES_FILE.exists():
-            try:
-                with open(VARIABLES_FILE, "r", encoding="utf-8") as f:
-                    data = yaml.safe_load(f) or {}
-                self.variables = data
-                if not self.default_variables:
-                    self.default_variables = copy.deepcopy(data)
-            except Exception as e:
-                print("Error loading variables.yaml:", e)
-                self.variables = {}
-        else:
-            self.variables = {}
-            self.default_variables = {}
-
     def save_variables(self):
+        """Write the current variables back into the loaded YAML under the Variables: key."""
+        if not self.current_yaml:
+            print("No YAML file is currently loaded – cannot save variables.")
+            return
+
         new_vars = {}
         for child in self.vars_scroll.winfo_children():
             if hasattr(child, "key_entry") and hasattr(child, "value_entry"):
@@ -307,17 +333,26 @@ class YamlMenuApp(ctk.CTk):
                     new_vars[key] = value
 
         self.variables = new_vars
+
+        # Re-load the whole file, update Variables, write it back
         try:
-            with open(VARIABLES_FILE, "w", encoding="utf-8") as f:
-                yaml.dump(self.variables, f, default_flow_style=False, allow_unicode=True)
-            print("Variables saved successfully!")
+            with open(self.current_yaml, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+
+            data["Variables"] = self.variables
+
+            with open(self.current_yaml, "w", encoding="utf-8") as f:
+                yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+            self.default_variables = copy.deepcopy(self.variables)
+            print(f"Variables saved into {self.current_yaml}")
         except Exception as e:
-            print(f"Error saving: {e}")
+            print(f"Error saving variables: {e}")
 
     def reset_to_default(self):
         self.variables = copy.deepcopy(self.default_variables)
         self.refresh_variables_list()
-        print("Reset to default values (not saved yet)")
+        print("Reset to the values that were present when this YAML was loaded")
 
     def add_variable(self):
         self.variables[f"NEW_VAR_{len(self.variables)+1}"] = ""
@@ -333,7 +368,7 @@ class YamlMenuApp(ctk.CTk):
             widget.destroy()
 
         if not self.variables:
-            lbl = ctk.CTkLabel(self.vars_scroll, text="No variables yet. Click 'Add Variable'.",
+            lbl = ctk.CTkLabel(self.vars_scroll, text="No variables defined in this YAML.\nClick 'Add Variable' to create some.",
                                text_color="gray")
             lbl.grid(row=0, column=0, columnspan=3, pady=20)
             return
@@ -371,24 +406,19 @@ class YamlMenuApp(ctk.CTk):
     def toggle_sidebar(self):
         if self.sidebar_expanded:
             self.sidebar.configure(width=60)
+            self.home_btn.grid_remove()
             self.yaml_dropdown.grid_remove()
             self.menu_frame.grid_remove()
             self.toggle_btn.configure(text="»")
             self.sidebar_expanded = False
         else:
             self.sidebar.configure(width=self.sidebar_width)
-            self.yaml_dropdown.grid()
+            self.home_btn.grid()
+            if self.current_title is None:
+                self.yaml_dropdown.grid(row=2, column=0, padx=15, pady=(0, 10), sticky="ew")
             self.menu_frame.grid()
             self.toggle_btn.configure(text="☰")
             self.sidebar_expanded = True
-
-    def load_yaml(self, path):
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                return yaml.safe_load(f) or {"title": "Empty", "menu": []}
-        except Exception as e:
-            print(f"Error loading YAML: {e}")
-            return {"title": "Error", "menu": []}
 
     def refresh_menu(self):
         for widget in self.menu_frame.winfo_children():
@@ -407,15 +437,9 @@ class YamlMenuApp(ctk.CTk):
             if has_children:
                 is_open = item_id in self.expanded_items
                 arrow = "▼" if is_open else "▶"
-
                 arrow_btn = ctk.CTkButton(
-                    row,
-                    text=arrow,
-                    width=28,
-                    height=32,
-                    font=ctk.CTkFont(size=12),
-                    fg_color="transparent",
-                    hover_color=("gray70", "gray30"),
+                    row, text=arrow, width=28, height=32, font=ctk.CTkFont(size=12),
+                    fg_color="transparent", hover_color=("gray70", "gray30"),
                     text_color=("gray10", "gray90"),
                     command=lambda iid=item_id: self.toggle_item(iid)
                 )
@@ -424,32 +448,22 @@ class YamlMenuApp(ctk.CTk):
                 spacer = ctk.CTkLabel(row, text="", width=28)
                 spacer.grid(row=0, column=0, padx=(8 + level * 14, 0))
 
-            # Main label button
             if has_children:
                 btn = ctk.CTkButton(
-                    row,
-                    text=f"{item.get('icon', '')}  {item['label']}".strip(),
-                    anchor="w",
-                    height=32,
-                    fg_color="transparent",
-                    text_color=("gray10", "gray90"),
-                    hover_color=("gray70", "gray30"),
+                    row, text=f"{item.get('icon', '')}  {item['label']}".strip(),
+                    anchor="w", height=32, fg_color="transparent",
+                    text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
                     font=ctk.CTkFont(size=14 if level == 0 else 13),
                     command=lambda i=item, iid=item_id: self.on_category_click(i, iid)
                 )
             else:
                 btn = ctk.CTkButton(
-                    row,
-                    text=f"{item.get('icon', '')}  {item['label']}".strip(),
-                    anchor="w",
-                    height=32,
-                    fg_color="transparent",
-                    text_color=("gray10", "gray90"),
-                    hover_color=("gray70", "gray30"),
+                    row, text=f"{item.get('icon', '')}  {item['label']}".strip(),
+                    anchor="w", height=32, fg_color="transparent",
+                    text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
                     font=ctk.CTkFont(size=14 if level == 0 else 13),
                     command=lambda i=item: self.on_item_click(i)
                 )
-
             btn.grid(row=0, column=1, sticky="ew", padx=(2, 8))
 
             if has_children and item_id in self.expanded_items:
@@ -463,7 +477,6 @@ class YamlMenuApp(ctk.CTk):
         self.refresh_menu()
 
     def on_category_click(self, item, item_id):
-        """Called when a parent category is clicked → toggle + update summary."""
         self.show_normal_view()
         self.current_item = item
 
@@ -472,10 +485,18 @@ class YamlMenuApp(ctk.CTk):
 
         self.page_title.configure(text=label)
 
+        self.summary_text.configure(height=90)
+        self.normal_view.grid_rowconfigure(2, weight=0)
+        self.summary_text.grid(row=2, column=0, padx=30, pady=(5, 15), sticky="ew")
+
         self.summary_text.configure(state="normal")
         self.summary_text.delete("1.0", "end")
         self.summary_text.insert("1.0", content)
         self.summary_text.configure(state="disabled")
+
+        self.play_button.grid()
+        self.output_label.grid()
+        self.output_text.grid()
 
         self.output_text.configure(state="normal")
         self.output_text.delete("1.0", "end")
@@ -486,7 +507,7 @@ class YamlMenuApp(ctk.CTk):
         self.toggle_item(item_id)
 
     # ------------------------------------------------------------------
-    # Normal item handling
+    # Item handling
     # ------------------------------------------------------------------
     def set_play_button_enabled(self, enabled: bool):
         if enabled:
@@ -515,10 +536,18 @@ class YamlMenuApp(ctk.CTk):
 
         self.page_title.configure(text=label)
 
+        self.summary_text.configure(height=90)
+        self.normal_view.grid_rowconfigure(2, weight=0)
+        self.summary_text.grid(row=2, column=0, padx=30, pady=(5, 15), sticky="ew")
+
         self.summary_text.configure(state="normal")
         self.summary_text.delete("1.0", "end")
         self.summary_text.insert("1.0", content)
         self.summary_text.configure(state="disabled")
+
+        self.play_button.grid()
+        self.output_label.grid()
+        self.output_text.grid()
 
         self.output_text.configure(state="normal")
         self.output_text.delete("1.0", "end")
@@ -566,7 +595,8 @@ class YamlMenuApp(ctk.CTk):
             else:
                 buffer = StringIO()
                 with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
-                    exec(action, {"__name__": "__main__"})
+                    # Make the current Variables available to the executed code
+                    exec(action, {"__name__": "__main__", "Variables": self.variables})
                 captured = buffer.getvalue()
                 output.append(captured if captured else "(Code ran successfully – no output)")
         except Exception as e:

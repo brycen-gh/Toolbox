@@ -1,4 +1,13 @@
-title: Training
+title: Troubleshooting
+
+Variables:
+  API_URL: https://api.example.com
+  DEBUG: true
+  TIMEOUT: 30
+  USERNAME: admin
+
+
+
 
 menu:
   - label: Home
@@ -56,3 +65,4 @@ menu:
 
       - label: About
         content: YAML-driven menu demo with script execution.
+
