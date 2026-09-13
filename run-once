@@ -1,0 +1,9 @@
+
+# Might need to run the following command in PowerShell to allow scripts to run:
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+
+# Activate the venv (relative path – works)
+.\.venv\Scripts\Activate.ps1
+
+# Make sure the packages are installed
+python -m pip install customtkinter pyyaml

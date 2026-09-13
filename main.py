@@ -1,0 +1,58 @@
+title: Troubleshooting
+
+menu:
+  - label: Home
+    icon: 🏠
+    content: |
+      Welcome to the GG Training Toolbox!
+      Here we have a collection of useful scripts and tools.
+
+  # ---------- Double nesting level ----------
+  - label: Docker PS
+    icon: 🚀
+    children:
+      - label: Install Docker
+        action: print("Deploying to STAGING...")
+        content: Deploys the current build to the staging environment.
+
+      - label: Install Portainer
+        action: print("Deploying to PRODUCTION...")
+        content: Deploys the current build to production (use with care).
+
+
+  - label: Container Administration
+    icon: 📜
+    children:
+      - label: Update Containers
+        action: print("Updating containers...")
+        content: Run a simple print statement.
+
+      - label: Install Portainer
+        action: scripts/example.py
+        content: Executed scripts/example.py
+
+      - label: List current directory
+        action: |
+          import os
+          print("Current directory contents:")
+          for f in os.listdir("."):
+              print(" -", f)
+        content: Listed files in the current folder.
+
+
+
+
+  - label: Settings
+    icon: ⚙️
+    children:
+      - label: Variable Settings
+        icon: 🔧
+        content: Manage application variables stored in variables.yaml
+        # special flag so the app knows to open the editor
+        special: variables_editor
+
+      - label: Theme info
+        content: This app uses CustomTkinter dark theme.
+
+      - label: About
+        content: YAML-driven menu demo with script execution.

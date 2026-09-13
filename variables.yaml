@@ -1,0 +1,22 @@
+# 1. Go to the project (single quotes protect the backtick)
+cd 'c:\Users\bryce\Desktop\`\Projects'
+
+# 2. Check if the venv exists
+if (-not (Test-Path '.\.venv\Scripts\Activate.ps1')) {
+    Write-Host "ERROR: .venv not found. Creating a new one..." -ForegroundColor Red
+    python -m venv .venv
+}
+
+# 3. Activate the venv
+.\.venv\Scripts\Activate.ps1
+
+# 4. Verify we're using the venv's Python
+Write-Host "`nUsing Python:" -ForegroundColor Cyan
+python -c "import sys; print(sys.executable)"
+
+# 5. Upgrade pip + install packages (this is the correct place)
+python -m pip install --upgrade pip
+python -m pip install customtkinter pyyaml
+
+# 6. Run your script
+python .\Toolbox\run-once.py
