@@ -1,53 +1,171 @@
-title: Deployment
+title: Cool Demo Menu
 
 menu:
-  - label: Home
+  # ──────────────────────────────────────────────
+  # 1. Simple Home / Dashboard
+  # ──────────────────────────────────────────────
+  - label: Dashboard
     icon: 🏠
     content: |
-      Welcome to the GG Training Toolbox!
-      Here we have a collection of useful scripts and tools.
+      Welcome to the Cool Demo Menu!
 
-  # ---------- Double nesting level ----------
-  - label: Docker Prep
-    icon: 🚀
-    children:
-      - label: Install Docker
-        action: print("Deploying to STAGING...")
-        content: Deploys the current build to the staging environment.
+      This YAML shows every feature the app currently supports:
+      • Nested categories (unlimited depth)
+      • Icons
+      • Summary text
+      • Inline Python actions
+      • External .py scripts
+      • Special pages (Variable Settings)
+      • Categories vs runnable items
 
-      - label: Install Portainer
-        action: print("Deploying to PRODUCTION...")
-        content: Deploys the current build to production (use with care).
-
-
-  - label: Container Administration
+  # ──────────────────────────────────────────────
+  # 2. Nested Scripts with multiple levels
+  # ──────────────────────────────────────────────
+  - label: Scripts
     icon: 📜
+    content: Collection of useful scripts and examples.
     children:
-      - label: Update Containers
-        action: print("Updating containers...")
-        content: Run a simple print statement.
 
-      - label: Install Portainer
+      - label: Quick Actions
+        icon: ⚡
+        content: Fast one-liner actions.
+        children:
+          - label: Hello World
+            icon: 👋
+            content: Prints a friendly greeting.
+            action: print("Hello from the Cool Demo Menu! 👋")
+
+          - label: Show Python Version
+            icon: 🐍
+            content: Displays the current Python version.
+            action: |
+              import sys
+              print(f"Python {sys.version}")
+
+          - label: List files in current folder
+            icon: 📂
+            content: Shows every file and folder in the working directory.
+            action: |
+              import os
+              print("Contents of current directory:\n")
+              for item in sorted(os.listdir(".")):
+                  print(" •", item)
+
+      - label: Deployments
+        icon: 🚀
+        content: Deployment related scripts.
+        children:
+          - label: Deploy to Staging
+            icon: 🧪
+            content: Simulates a staging deployment.
+            action: |
+              print("=== Deploying to STAGING ===")
+              print("Building...")
+              print("Uploading artifacts...")
+              print("✅ Staging deployment complete!")
+
+          - label: Deploy to Production
+            icon: 🏭
+            content: Simulates a production deployment (be careful!).
+            action: |
+              print("=== Deploying to PRODUCTION ===")
+              print("Running final checks...")
+              print("Pushing to prod...")
+              print("🚀 Production deployment finished!")
+
+          - label: Rollback
+            icon: ⏪
+            content: Rolls back the last deployment.
+            action: print("⏪ Rollback initiated... done.")
+
+      - label: External Script Example
+        icon: 📄
+        content: |
+          This item runs an external Python file.
+          Create a file called scripts/example.py for it to work.
         action: scripts/example.py
-        content: Executed scripts/example.py
 
-      - label: List current directory
-        action: |
-          import os
-          print("Current directory contents:")
-          for f in os.listdir("."):
-              print(" -", f)
-        content: Listed files in the current folder.
+  # ──────────────────────────────────────────────
+  # 3. Deep nesting example
+  # ──────────────────────────────────────────────
+  - label: Deep Nesting Demo
+    icon: 🪆
+    content: Shows that nesting can go as deep as you want.
+    children:
+      - label: Level 2
+        children:
+          - label: Level 3
+            children:
+              - label: Level 4
+                children:
+                  - label: Level 5 - You made it!
+                    icon: 🎉
+                    content: This is five levels deep.
+                    action: print("🎉 Congratulations! You reached level 5!")
 
-
+  # ──────────────────────────────────────────────
+  # 4. Settings + special Variable Editor
+  # ──────────────────────────────────────────────
   - label: Settings
     icon: ⚙️
+    content: Application settings and configuration.
     children:
       - label: Variable Settings
         icon: 🔧
-        content: Manage application variables stored in variables.yaml
-        # special flag so the app knows to open the editor
-        special: variables_editor
+        content: Open the visual editor for variables.yaml
+        special: variables_editor          # ← this is the magic flag
+
+      - label: Theme Info
+        icon: 🎨
+        content: |
+          Current theme: Dark mode
+          Color theme: Blue
+          Framework: CustomTkinter
 
       - label: About
-        content: Howdy! This is a toolbox made by Mr. G and Grok.
+        icon: ℹ️
+        content: |
+          YAML-driven menu system
+          Features:
+          - Collapsible sidebar
+          - Nested expandable categories
+          - Inline & external script execution
+          - Live variable editor
+          - Multiple menu files via dropdown
+
+  # ──────────────────────────────────────────────
+  # 5. Fun / Easter eggs
+  # ──────────────────────────────────────────────
+  - label: Fun Zone
+    icon: 🎮
+    content: Just for fun.
+    children:
+      - label: Random Number
+        icon: 🎲
+        content: Generates a random number between 1 and 100.
+        action: |
+          import random
+          print(f"🎲 Your random number is: {random.randint(1, 100)}")
+
+      - label: Current Time
+        icon: 🕒
+        content: Shows the current date and time.
+        action: |
+          from datetime import datetime
+          print("Current time:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+      - label: ASCII Art
+        icon: 🖼️
+        content: Prints a little rocket.
+        action: |
+          print(r"""
+               /\
+              /  \
+             |    |
+             |    |
+            /|    |\
+           / |    | \
+              |  |
+             /    \
+            /      \
+          """)
