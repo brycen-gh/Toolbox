@@ -1,9 +1,22 @@
+# 1. Go to the project (single quotes protect the backtick)
+cd 'c:\Users\bryce\Desktop\`\Projects'
 
-# Might need to run the following command in PowerShell to allow scripts to run:
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+# 2. Check if the venv exists
+if (-not (Test-Path '.\.venv\Scripts\Activate.ps1')) {
+    Write-Host "ERROR: .venv not found. Creating a new one..." -ForegroundColor Red
+    python -m venv .venv
+}
 
-# Activate the venv (relative path – works)
+# 3. Activate the venv
 .\.venv\Scripts\Activate.ps1
 
-# Make sure the packages are installed
+# 4. Verify we're using the venv's Python
+Write-Host "`nUsing Python:" -ForegroundColor Cyan
+python -c "import sys; print(sys.executable)"
+
+# 5. Upgrade pip + install packages (this is the correct place)
+python -m pip install --upgrade pip
 python -m pip install customtkinter pyyaml
+
+# 6. Run your script
+python .\Toolbox\run-once.py
