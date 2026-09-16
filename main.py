@@ -161,7 +161,7 @@ class YamlMenuApp(ctk.CTk):
         self.output_label.grid_remove()
         self.output_text.grid_remove()
 
-        self.summary_text.configure(height=400)
+        self.summary_text.configure(height=350)
         self.normal_view.grid_rowconfigure(2, weight=1)
         self.summary_text.grid(row=2, column=0, padx=30, pady=(5, 25), sticky="nsew")
 
@@ -306,7 +306,7 @@ class YamlMenuApp(ctk.CTk):
         self.refresh_variables_list()
 
     # ------------------------------------------------------------------
-    # Variables (now per-YAML)
+    # Variables Modification (per-YAML)
     # ------------------------------------------------------------------
     def save_variables(self):
         """Write the current variables back into the loaded YAML under the Variables: key."""

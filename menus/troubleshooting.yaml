@@ -10,7 +10,7 @@ Variables:
 
 
 menu:
-  - label: Home
+  - label: Troubleshooting
     icon: 🏠
     content: |
       Welcome to the GG Training Toolbox!
