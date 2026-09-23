@@ -1,0 +1,830 @@
+title: Training
+
+Home:
+  label: Training
+  icon: flag
+  content: |
+    # PCAP Training
+
+    Replay saved training captures through the configured target interface.
+    PCAP files are loaded from ./repos/pcap by default.
+
+    The SecOnion section can check or clear a local or remote training SIEM.
+    Remote creds are encrypted and unlocked once per app session.
+
+    Only replay captures on an isolated training network where you have
+    authorization to generate the recorded traffic.
+
+VariablesFile: training-variables.yaml
+
+menu:
+  - label: PCAP Replay
+    icon: run
+    content: Replay PCAP examples organized by cyber kill chain stage.
+    children:
+      - label: Recon
+        icon: search
+        content: Traffic associated with target discovery and information gathering.
+        children:
+          - label: SSH Scan
+            icon: document
+            content: Scan the 192.168.0.0/16 network for systems exposing SSH.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay ssh_scan_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: ssh_scan_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Port Scan
+            icon: document
+            content: Demonstrate broad TCP port discovery against training targets.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay port_scan_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: port_scan_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: DNS Enumeration
+            icon: document
+            content: Demonstrate DNS queries used to enumerate hosts and services.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay dns_enumeration_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: dns_enumeration_01
+              interface: "${TARGET_DEVICE}"
+
+      - label: Weaponization
+        icon: settings
+        content: Representative network activity used while preparing a payload or exploit package.
+        children:
+          - label: Payload Staging
+            icon: document
+            content: Demonstrate traffic used to stage a training payload for later delivery.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay payload_staging_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: payload_staging_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Exploit Kit Download
+            icon: document
+            content: Demonstrate retrieval of components used to assemble a simulated exploit kit.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay exploit_kit_download_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: exploit_kit_download_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Document Staging
+            icon: document
+            content: Demonstrate network activity related to staging a simulated malicious document.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay document_staging_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: document_staging_01
+              interface: "${TARGET_DEVICE}"
+
+      - label: Delivery
+        icon: download
+        content: Traffic representing transmission of a payload to a target.
+        children:
+          - label: Phishing Attachment
+            icon: document
+            content: Demonstrate email traffic delivering a simulated malicious attachment.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay phishing_attachment_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: phishing_attachment_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Drive-by Download
+            icon: document
+            content: Demonstrate browser traffic associated with a simulated drive-by download.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay drive_by_download_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: drive_by_download_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Malicious Link
+            icon: document
+            content: Demonstrate a target following a simulated malicious link.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay malicious_link_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: malicious_link_01
+              interface: "${TARGET_DEVICE}"
+
+      - label: Exploitation
+        icon: flag
+        content: Traffic representing exploitation of a service or client vulnerability.
+        children:
+          - label: SMB Exploit
+            icon: document
+            content: Demonstrate a simulated exploit attempt against an SMB service.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay smb_exploit_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: smb_exploit_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Web Exploit
+            icon: document
+            content: Demonstrate a simulated exploit attempt against a web application.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay web_exploit_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: web_exploit_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Client Exploit
+            icon: document
+            content: Demonstrate traffic from a simulated client-side exploitation attempt.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay client_exploit_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: client_exploit_01
+              interface: "${TARGET_DEVICE}"
+
+      - label: Installation
+        icon: computer
+        content: Traffic associated with installing payloads or establishing persistence.
+        children:
+          - label: Malware Dropper
+            icon: document
+            content: Demonstrate transfer activity from a simulated malware dropper.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay malware_dropper_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: malware_dropper_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Persistence Download
+            icon: document
+            content: Demonstrate retrieval of a simulated persistence component.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay persistence_download_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: persistence_download_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Web Shell Install
+            icon: document
+            content: Demonstrate traffic associated with placing a simulated web shell.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay webshell_install_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: webshell_install_01
+              interface: "${TARGET_DEVICE}"
+
+      - label: Command & Control
+        icon: cloud
+        content: Traffic used by simulated compromised systems to communicate with an operator.
+        children:
+          - label: HTTP Beacon
+            icon: document
+            content: Demonstrate periodic simulated command-and-control traffic over HTTP.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay http_beacon_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: http_beacon_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: DNS Beacon
+            icon: document
+            content: Demonstrate periodic simulated command-and-control traffic over DNS.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay dns_beacon_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: dns_beacon_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Reverse Shell
+            icon: document
+            content: Demonstrate a simulated reverse-shell command channel.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay reverse_shell_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: reverse_shell_01
+              interface: "${TARGET_DEVICE}"
+
+      - label: Actions on Objectives
+        icon: project
+        content: Traffic representing post-compromise activity performed to achieve an objective.
+        children:
+          - label: Data Discovery
+            icon: document
+            content: Demonstrate simulated discovery of files, shares, or sensitive data.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay data_discovery_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: data_discovery_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Lateral Movement
+            icon: document
+            content: Demonstrate simulated movement from one training host to another.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay lateral_movement_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: lateral_movement_01
+              interface: "${TARGET_DEVICE}"
+
+          - label: Data Exfiltration
+            icon: document
+            content: Demonstrate simulated outbound transfer of collected training data.
+            action_id: replay_pcap
+            confirm: true
+            confirm_message: Replay data_exfiltration_01 on the configured target interface?
+            parameters:
+              directory: "${PCAP_DIRECTORY}"
+              pcap_name: data_exfiltration_01
+              interface: "${TARGET_DEVICE}"
+
+  - label: Host Actions
+    icon: computer
+    content: Generate controlled activity on this Windows VM, inspect its local event logs, and clean up exercise artifacts.
+    children:
+      - label: Check Local Readiness
+        icon: readiness
+        content: Check elevation, Windows event logs, and audit policy without changing the computer.
+        action_id: local_host_training
+        parameters:
+          mode: readiness
+          scenario: process_creation
+
+      - label: Successful Login
+        icon: document
+        content: Generate one successful interactive authentication using a temporary local training account.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the Successful Login exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: successful_login
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: successful_login
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: successful_login
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest Successful Login exercise?
+            parameters:
+              mode: cleanup
+              scenario: successful_login
+              run_id: latest
+
+      - label: Failed Login
+        icon: document
+        content: Generate one invalid-password authentication attempt using a temporary local training account.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the Failed Login exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: failed_login
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: failed_login
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: failed_login
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest Failed Login exercise?
+            parameters:
+              mode: cleanup
+              scenario: failed_login
+              run_id: latest
+
+      - label: Process Creation
+        icon: document
+        content: Launch a harmless command with a unique exercise marker.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the Process Creation exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: process_creation
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: process_creation
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: process_creation
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest Process Creation exercise?
+            parameters:
+              mode: cleanup
+              scenario: process_creation
+              run_id: latest
+
+      - label: Parent/Child Process
+        icon: document
+        content: Launch whoami.exe as a child of cmd.exe.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the Parent/Child Process exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: parent_child
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: parent_child
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: parent_child
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest Parent/Child Process exercise?
+            parameters:
+              mode: cleanup
+              scenario: parent_child
+              run_id: latest
+
+      - label: File Activity
+        icon: document
+        content: Create, modify, and delete a marker file in the run folder.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the File Activity exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: file_activity
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: file_activity
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: file_activity
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest File Activity exercise?
+            parameters:
+              mode: cleanup
+              scenario: file_activity
+              run_id: latest
+
+      - label: PowerShell Activity
+        icon: document
+        content: Run a harmless PowerShell script that writes a marker file.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the PowerShell Activity exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: powershell_activity
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: powershell_activity
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: powershell_activity
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest PowerShell Activity exercise?
+            parameters:
+              mode: cleanup
+              scenario: powershell_activity
+              run_id: latest
+
+      - label: Service Activity
+        icon: document
+        content: Create, start, stop, and later clean up a dedicated training service.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the Service Activity exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: service_activity
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: service_activity
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: service_activity
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest Service Activity exercise?
+            parameters:
+              mode: cleanup
+              scenario: service_activity
+              run_id: latest
+
+      - label: Scheduled Task
+        icon: document
+        content: Create and run a dedicated task that writes a marker file.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the Scheduled Task exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: scheduled_task
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: scheduled_task
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: scheduled_task
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest Scheduled Task exercise?
+            parameters:
+              mode: cleanup
+              scenario: scheduled_task
+              run_id: latest
+
+      - label: Registry Activity
+        icon: document
+        content: Create and modify a value beneath HKCU\Software\ToolboxTraining.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the Registry Activity exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: registry_activity
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: registry_activity
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: registry_activity
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest Registry Activity exercise?
+            parameters:
+              mode: cleanup
+              scenario: registry_activity
+              run_id: latest
+
+      - label: Account Activity
+        icon: document
+        content: Create, disable, and enable a temporary local training account.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the Account Activity exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: account_activity
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: account_activity
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: account_activity
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest Account Activity exercise?
+            parameters:
+              mode: cleanup
+              scenario: account_activity
+              run_id: latest
+
+      - label: Process Chain
+        icon: document
+        content: Run a PowerShell-to-cmd-to-whoami chain and write its output to a marker file.
+        children:
+          - label: Run Exercise
+            icon: run
+            content: Generate the activity and save a unique instructor run record.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Run the Process Chain exercise on this Windows computer?
+            parameters:
+              mode: run
+              scenario: process_chain
+
+          - label: Analyze Local Logs
+            icon: search
+            content: Inspect local Windows logs for the latest run and export candidate evidence.
+            action_id: local_host_training
+            parameters:
+              mode: analyze
+              scenario: process_chain
+              run_id: latest
+
+          - label: Show Instructor Record
+            icon: information
+            content: Display the execution record for the latest run; this is separate from analyst scoring.
+            action_id: local_host_training
+            parameters:
+              mode: results
+              scenario: process_chain
+              run_id: latest
+
+          - label: Clean Up Latest Run
+            icon: delete
+            content: Remove artifacts owned by the latest run while preserving its record and Windows event logs.
+            action_id: local_host_training
+            confirm: true
+            confirm_message: Clean up artifacts from the latest Process Chain exercise?
+            parameters:
+              mode: cleanup
+              scenario: process_chain
+              run_id: latest
+
+  - label: SecOnion
+    icon: flag
+    content: Check or clear the SecOnion instance used by this training environment.
+    children:
+      - label: Check SecOnion Status
+        icon: readiness
+        content: Run so-status and list SecOnion containers on the configured target.
+        action_id: troubleshoot_security_onion
+        parameters:
+          mode: status
+          target: "${SECURITY_ONION_TARGET_MODE}"
+          host: "${SECURITY_ONION_REMOTE_HOST}"
+          port: "${SECURITY_ONION_REMOTE_PORT}"
+          accept_new_host_key: "${SECURITY_ONION_ACCEPT_NEW_HOST_KEY}"
+          log_lines: 200
+
+      - label: Config Remote Creds
+        icon: save
+        content: |
+          Prompt for the SecOnion SSH username, SSH/sudo password, and a
+          vault passphrase. Only encrypted values are written to
+          variables/training-variables.yaml.
+        action_id: configure_remote_credentials
+
+      - label: Lock Session Creds
+        icon: reset
+        content: Remove local sudo and decrypted SecOnion creds from application memory.
+        action_id: lock_remote_credentials
+
+      - label: Clear SecOnion Data
+        icon: delete
+        content: |
+          Permanently run so-elastic-clear on the configured SecOnion
+          target. This deletes all Elasticsearch documents and indices, including
+          alerts and searchable event data. It does not delete the toolbox PCAPs.
+        action_id: troubleshoot_security_onion
+        confirm: true
+        confirm_message: Permanently delete all SecOnion Elasticsearch documents and indices on the selected target?
+        confirm_phrase: CLEAR SECURITY ONION DATA
+        parameters:
+          mode: clear
+          target: "${SECURITY_ONION_TARGET_MODE}"
+          host: "${SECURITY_ONION_REMOTE_HOST}"
+          port: "${SECURITY_ONION_REMOTE_PORT}"
+          accept_new_host_key: "${SECURITY_ONION_ACCEPT_NEW_HOST_KEY}"
+          log_lines: 200
+
+  - label: Settings
+    icon: settings
+    children:
+      - label: Variable Settings
+        icon: variables
+        content: Change PCAP replay and SecOnion target settings in variables/training-variables.yaml.
+        special: variables_editor
+
+      - label: About
+        icon: information
+        content: |
+          Training PCAPs are replayed with tcpreplay through the interface
+          configured as TARGET_DEVICE in variables/training-variables.yaml.
+          SecOnion may be local or remote; saved remote creds are
+          encrypted and the vault passphrase is never written to disk.

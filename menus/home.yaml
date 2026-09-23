@@ -1,0 +1,25 @@
+title: Home
+
+menu:
+  - label: Home
+    icon: home
+    content: |
+      Welcome to the YAML Menu Tool
+
+      This is a flexible menu system driven entirely by simple YAML files.
+
+      How to use it
+      ─────────────────────────────
+      1. Use the dropdown at the top of the sidebar to switch between different tool collections.
+      2. Click any category to expand or collapse it.
+      3. Click a script to see its description.
+      4. Press the green “Run Script” button to execute it.
+
+      >>> Open Settings → Variable Settings to edit script variables. <<<
+
+      All menus live in the /menus folder.
+      The page you are reading right now always comes from menus/home.yaml.
+
+      If you have any questions, please reach out to Mr. G or AI.
+      This got really out of hand.
+      Like really out of hand.

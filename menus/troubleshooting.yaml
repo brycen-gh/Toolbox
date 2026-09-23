@@ -1,0 +1,350 @@
+title: Troubleshooting
+
+Home:
+  label: Troubleshooting
+  icon: readiness
+  content: |
+    # Docker and SecOnion Troubleshooting
+
+    Run diagnostics against this computer or a remote Linux host.
+
+    Set TARGET_MODE to local or remote in Variable Settings. Remote usernames
+    and passwords are stored only as encrypted values. The vault passphrase is
+    never saved and is requested once per application session.
+
+    Most actions are read-only. Run SecOnion Check-in is clearly marked
+    because it applies Salt states and can change the target system.
+
+VariablesFile: troubleshooting-variables.yaml
+
+menu:
+  - label: Docker
+    icon: docker
+    content: Inspect Docker Engine, images, containers, and logs without deleting or pruning data.
+    children:
+      - label: Engine Health
+        icon: readiness
+        content: Show Docker versions, daemon information, storage drivers, and disk usage.
+        action_id: troubleshoot_docker
+        parameters:
+          mode: engine
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          use_sudo: "${DOCKER_USE_SUDO}"
+          log_lines: "${LOG_LINES}"
+
+      - label: Image Diagnostics
+        icon: containers
+        content: List image digests and dangling images. If DOCKER_IMAGE is set, also inspect that image and show its history.
+        action_id: troubleshoot_docker
+        parameters:
+          mode: images
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          use_sudo: "${DOCKER_USE_SUDO}"
+          image: "${DOCKER_IMAGE}"
+          log_lines: "${LOG_LINES}"
+
+      - label: Container Status
+        icon: system
+        content: List all containers with complete status details and show recent Docker events.
+        action_id: troubleshoot_docker
+        parameters:
+          mode: containers
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          use_sudo: "${DOCKER_USE_SUDO}"
+          log_lines: "${LOG_LINES}"
+
+
+
+  - label: SecOnion
+    icon: flag
+    content: Run common SecOnion status, resource, service, and log checks.
+    children:
+      - label: Run so-status
+        icon: readiness
+        content: Run so-status and list SecOnion containers.
+        action_id: troubleshoot_security_onion
+        parameters:
+          mode: status
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          log_lines: "${LOG_LINES}"
+
+      - label: System Health
+        icon: system
+        content: Check load, memory, filesystem usage, Docker service health, and failed systemd services.
+        action_id: troubleshoot_security_onion
+        parameters:
+          mode: health
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          log_lines: "${LOG_LINES}"
+
+      - label: Read Core Logs
+        icon: document
+        content: Read recent Docker and Salt journals plus SecOnion Suricata and Kibana logs.
+        action_id: troubleshoot_security_onion
+        parameters:
+          mode: logs
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          log_lines: "${LOG_LINES}"
+
+      - label: Selected Service Logs
+        icon: document
+        content: Inspect SECURITY_ONION_SERVICE and read its latest Docker logs.
+        action_id: troubleshoot_security_onion
+        parameters:
+          mode: service_logs
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          service: "${SECURITY_ONION_SERVICE}"
+          log_lines: "${LOG_LINES}"
+
+      - label: Run SecOnion Check-in
+        icon: run
+        content: Run so-checkin to apply all Salt states. This can change services and configuration on the target.
+        action_id: troubleshoot_security_onion
+        confirm: true
+        confirm_message: Run a full SecOnion Salt check-in on the selected target?
+        parameters:
+          mode: checkin
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          log_lines: "${LOG_LINES}"
+
+  - label: Container Logs
+    icon: document
+    content: Expand a configured Docker container, then select Read Logs to view its recent timestamped output.
+    children:
+      - label: OpenProject
+        icon: containers
+        children:
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: OPENPROJECT
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the configured OpenProject container and read its recent timestamped logs.
+            action_id: troubleshoot_docker
+            parameters:
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${OPENPROJECT_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the configured OpenProject container, then display its resulting status.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the OpenProject container?
+            parameters:
+              mode: container_restart
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${OPENPROJECT_CONTAINER_NAME}"
+
+      - label: Etherpad
+        icon: containers
+        children:
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: ETHERPAD
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the configured Etherpad container and read its recent timestamped logs.
+            action_id: troubleshoot_docker
+            parameters:
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${ETHERPAD_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the configured Etherpad container, then display its resulting status.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the Etherpad container?
+            parameters:
+              mode: container_restart
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${ETHERPAD_CONTAINER_NAME}"
+
+      - label: Nextcloud
+        icon: containers
+        children:
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: NEXTCLOUD
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the configured Nextcloud container and read its recent timestamped logs.
+            action_id: troubleshoot_docker
+            parameters:
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${NEXTCLOUD_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the configured Nextcloud container, then display its resulting status.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the Nextcloud container?
+            parameters:
+              mode: container_restart
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${NEXTCLOUD_CONTAINER_NAME}"
+
+      - label: CTFd
+        icon: containers
+        children:
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: CTFD
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the configured CTFd container and read its recent timestamped logs.
+            action_id: troubleshoot_docker
+            parameters:
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${CTFD_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the configured CTFd container, then display its resulting status.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the CTFd container?
+            parameters:
+              mode: container_restart
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${CTFD_CONTAINER_NAME}"
+
+      - label: Portainer
+        icon: containers
+        children:
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: PORTAINER
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the configured Portainer container and read its recent timestamped logs.
+            action_id: troubleshoot_docker
+            parameters:
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${PORTAINER_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the configured Portainer container, then display its resulting status.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the Portainer container?
+            parameters:
+              mode: container_restart
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${PORTAINER_CONTAINER_NAME}"
+
+
+  - label: Settings
+    icon: settings
+    children:
+      - label: Variable Settings
+        icon: variables
+        content: Change target, host, Docker, SecOnion, and log settings stored in variables/troubleshooting-variables.yaml.
+        special: variables_editor
+
+      - label: Config Remote Creds
+        icon: save
+        content: |
+          Prompt for an SSH username, SSH/sudo password, and vault passphrase.
+          Only encrypted credential values are written to variables/troubleshooting-variables.yaml.
+        action_id: configure_remote_credentials
+
+      - label: Lock Session Creds
+        icon: reset
+        content: Remove local sudo and decrypted remote creds from memory while preserving encrypted YAML values.
+        action_id: lock_remote_credentials
+
+      - label: About
+        icon: information
+        content: |
+          Troubleshooting actions can target this computer or a remote Linux
+          host. Editable values are kept in variables/troubleshooting-variables.yaml.
+          Remote creds are encrypted and the vault passphrase is never
+          written to disk.

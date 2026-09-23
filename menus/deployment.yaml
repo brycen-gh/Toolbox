@@ -1,0 +1,297 @@
+title: Deployment
+
+Home:
+  label: Deployment Toolbox
+  icon: deployment
+  content: |
+    # Deployment Toolbox
+
+    Install and manage the services used by this environment.
+
+    Use the search field to find an action. Search is case-insensitive and
+    supports shell-style wildcards: `*docker*`, `install*`, `?tfd`, and
+    `[NU]*cloud*`.
+
+    Review each action before running it. Installation and deployment actions
+    display a confirmation prompt before making changes.
+
+VariablesFile: deployment-variables.yaml
+
+menu:
+  - label: System Readiness
+    icon: readiness
+    content: Inspect this host before installing services.
+    children:
+      - label: Show System Info
+        icon: system
+        content: Show the detected Linux distribution, Docker path, and project directory.
+        action_id: system_info
+
+      - label: Check Docker Status
+        icon: docker
+        content: Display the Docker server version and currently running containers.
+        action_id: docker_status
+
+  - label: Prep Install
+    icon: computer
+    content: Prepare this Linux host for container deployments.
+    children:
+      - label: Install Docker
+        icon: docker
+        content: |
+          Install Docker Engine and the Compose plugin, then enable the Docker service.
+          Rocky/RHEL-family and Debian/Ubuntu-family systems are supported.
+        action_id: install_docker
+        confirm: true
+        confirm_message: Install Docker packages and enable the Docker service?
+
+      - label: Save/Update Images
+        icon: download
+        content: Pull configured images and export portable docker image TAR archives under ./repos/containers. This will take a long while, depending on your network speed. (~1GB per image))
+        action_id: pull_images
+        confirm: true
+        confirm_message: Download and export the latest configured container images?
+        parameters:
+          directory: "${CONTAINER_IMAGE_ARCHIVE_ROOT}"
+          pull_attempts: "${CONTAINER_IMAGE_PULL_ATTEMPTS}"
+          images:
+            - "${OPENPROJECT_IMAGE}"
+            - "${ETHERPAD_IMAGE}"
+            - "${NEXTCLOUD_IMAGE}"
+            - "${CTFD_IMAGE}"
+            - "${PORTAINER_IMAGE}"
+
+      - label: Load Saved Images
+        icon: containers
+        content: Load all portable Docker image TAR archives from ./repos/containers.
+        action_id: load_images
+        confirm: true
+        confirm_message: Load the saved Docker images into this computer?
+        parameters:
+          directory: "${CONTAINER_IMAGE_ARCHIVE_ROOT}"
+
+  - label: Containers
+    icon: containers
+    content: Deploy applications using container data stored on this computer's local disk.
+    children:
+      - label: Install OpenProject
+        icon: project
+        content: Deploy OpenProject on the configured host port.
+        action_id: run_container
+        confirm: true
+        parameters:
+          name: "${OPENPROJECT_CONTAINER_NAME}"
+          image: "${OPENPROJECT_IMAGE}"
+          recreate: "${OPENPROJECT_RECREATE}"
+          restart: "${OPENPROJECT_RESTART_POLICY}"
+          ports: ["${OPENPROJECT_HOST_PORT}:${OPENPROJECT_CONTAINER_PORT}"]
+          volumes: ["${OPENPROJECT_DATA_VOLUME}:${OPENPROJECT_DATA_PATH}"]
+          environment:
+            SECRET_KEY_BASE: "${OPENPROJECT_SECRET_KEY_BASE}"
+            OPENPROJECT_HOST__NAME: "${OPENPROJECT_HOST_NAME}"
+            OPENPROJECT_HTTPS: "${OPENPROJECT_HTTPS}"
+
+      - label: Install Etherpad
+        icon: document
+        content: Deploy Etherpad on the configured host port.
+        action_id: run_container
+        confirm: true
+        parameters:
+          name: "${ETHERPAD_CONTAINER_NAME}"
+          image: "${ETHERPAD_IMAGE}"
+          recreate: "${ETHERPAD_RECREATE}"
+          restart: "${ETHERPAD_RESTART_POLICY}"
+          ports: ["${ETHERPAD_HOST_PORT}:${ETHERPAD_CONTAINER_PORT}"]
+          volumes: ["${ETHERPAD_DATA_VOLUME}:${ETHERPAD_DATA_PATH}"]
+
+      - label: Install Nextcloud
+        icon: cloud
+        content: Deploy Nextcloud on the configured host port.
+        action_id: run_container
+        confirm: true
+        parameters:
+          name: "${NEXTCLOUD_CONTAINER_NAME}"
+          image: "${NEXTCLOUD_IMAGE}"
+          recreate: "${NEXTCLOUD_RECREATE}"
+          restart: "${NEXTCLOUD_RESTART_POLICY}"
+          ports: ["${NEXTCLOUD_HOST_PORT}:${NEXTCLOUD_CONTAINER_PORT}"]
+          volumes: ["${NEXTCLOUD_DATA_VOLUME}:${NEXTCLOUD_DATA_PATH}"]
+
+      - label: Install CTFd
+        icon: flag
+        content: |
+          Deploy a single-node CTFd starter instance with a generated secret key.
+          For production, use CTFd's official multi-service Compose deployment.
+        action_id: run_container
+        confirm: true
+        parameters:
+          name: "${CTFD_CONTAINER_NAME}"
+          image: "${CTFD_IMAGE}"
+          recreate: "${CTFD_RECREATE}"
+          restart: "${CTFD_RESTART_POLICY}"
+          ports: ["${CTFD_HOST_PORT}:${CTFD_CONTAINER_PORT}"]
+          volumes: ["${CTFD_DATA_VOLUME}:${CTFD_DATA_PATH}"]
+          environment:
+            SECRET_KEY: "${CTFD_SECRET_KEY}"
+
+      - label: Install Portainer
+        icon: portainer
+        content: Deploy Portainer on HTTPS port 9443.
+        action_id: run_container
+        confirm: true
+        parameters:
+          name: "${PORTAINER_CONTAINER_NAME}"
+          image: "${PORTAINER_IMAGE}"
+          recreate: "${PORTAINER_RECREATE}"
+          restart: "${PORTAINER_RESTART_POLICY}"
+          ports:
+            - "${PORTAINER_EDGE_HOST_PORT}:${PORTAINER_EDGE_CONTAINER_PORT}"
+            - "${PORTAINER_HTTPS_HOST_PORT}:${PORTAINER_HTTPS_CONTAINER_PORT}"
+          volumes:
+            - "${PORTAINER_DOCKER_SOCKET}:${PORTAINER_DOCKER_SOCKET_TARGET}"
+            - "${PORTAINER_DATA_VOLUME}:${PORTAINER_DATA_PATH}"
+
+      - label: Backups
+        icon: save
+        content: Create and load versioned backups for each managed container.
+        children:
+          - label: OpenProject
+            icon: project
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Create a new timestamped OpenProject data backup.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause OpenProject and create a new backup version?
+                parameters:
+                  data_directory: "${OPENPROJECT_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/openproject"
+                  archive_prefix: openproject
+                  containers: ["${OPENPROJECT_CONTAINER_NAME}"]
+
+              - label: Load Backup
+                icon: download
+                content: Select any OpenProject backup found in ./backups/openproject.
+                special: backup_selector
+                parameters:
+                  data_directory: "${OPENPROJECT_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/openproject"
+                  containers: ["${OPENPROJECT_CONTAINER_NAME}"]
+
+          - label: Etherpad
+            icon: document
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Create a new timestamped Etherpad data backup.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause Etherpad and create a new backup version?
+                parameters:
+                  data_directory: "${ETHERPAD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/etherpad"
+                  archive_prefix: etherpad
+                  containers: ["${ETHERPAD_CONTAINER_NAME}"]
+
+              - label: Load Backup
+                icon: download
+                content: Select any Etherpad backup found in ./backups/etherpad.
+                special: backup_selector
+                parameters:
+                  data_directory: "${ETHERPAD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/etherpad"
+                  containers: ["${ETHERPAD_CONTAINER_NAME}"]
+
+          - label: Nextcloud
+            icon: cloud
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Create a new timestamped Nextcloud data backup.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause Nextcloud and create a new backup version?
+                parameters:
+                  data_directory: "${NEXTCLOUD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/nextcloud"
+                  archive_prefix: nextcloud
+                  containers: ["${NEXTCLOUD_CONTAINER_NAME}"]
+
+              - label: Load Backup
+                icon: download
+                content: Select any Nextcloud backup found in ./backups/nextcloud.
+                special: backup_selector
+                parameters:
+                  data_directory: "${NEXTCLOUD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/nextcloud"
+                  containers: ["${NEXTCLOUD_CONTAINER_NAME}"]
+
+          - label: CTFd
+            icon: flag
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Create a new timestamped CTFd data backup.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause CTFd and create a new backup version?
+                parameters:
+                  data_directory: "${CTFD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/ctfd"
+                  archive_prefix: ctfd
+                  containers: ["${CTFD_CONTAINER_NAME}"]
+
+              - label: Load Backup
+                icon: download
+                content: Select any CTFd backup found in ./backups/ctfd.
+                special: backup_selector
+                parameters:
+                  data_directory: "${CTFD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/ctfd"
+                  containers: ["${CTFD_CONTAINER_NAME}"]
+
+          - label: Portainer
+            icon: portainer
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Create a new timestamped Portainer data backup.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause Portainer and create a new backup version?
+                parameters:
+                  data_directory: "${PORTAINER_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/portainer"
+                  archive_prefix: portainer
+                  containers: ["${PORTAINER_CONTAINER_NAME}"]
+
+              - label: Load Backup
+                icon: download
+                content: Select any Portainer backup found in ./backups/portainer.
+                special: backup_selector
+                parameters:
+                  data_directory: "${PORTAINER_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/portainer"
+                  containers: ["${PORTAINER_CONTAINER_NAME}"]
+
+  - label: Settings
+    icon: settings
+    children:
+      - label: Variable Settings
+        icon: variables
+        content: Change local data, backup, image, and deployment values stored in variables/deployment-variables.yaml.
+        special: variables_editor
+
+      - label: About
+        icon: information
+        content: |
+          YAML Deployment Toolbox
+
+          Menu configuration is kept in menus/deployment.yaml. Editable
+          deployment values are kept separately in variables/deployment-variables.yaml.
+          Active service data defaults to ~/.local/share/yaml-toolbox/containers
+          on the computer's local disk. Versioned backups are stored by service
+          under ./backups, while image archives remain in ./repos/containers.
+          Privileged operations are implemented as allow-listed actions in
+          execution_engines/main.py.

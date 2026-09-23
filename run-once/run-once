@@ -1,0 +1,468 @@
+#!/usr/bin/env bash
+# One-time, repeatable setup and offline-repository builder for the YAML toolbox.
+
+set -Eeuo pipefail
+
+RUN_ONCE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd -- "${RUN_ONCE_DIR}/.." && pwd)"
+RUN_DIR="$(pwd)"
+VENV_DIR="${SCRIPT_DIR}/.venv"
+REQUIREMENTS_FILE="${SCRIPT_DIR}/requirements.txt"
+MAIN_FILE="${SCRIPT_DIR}/main.py"
+LAUNCHER_FILE="${SCRIPT_DIR}/run_toolbox.sh"
+PCAP_DIR="${SCRIPT_DIR}/repos/pcap"
+BACKUPS_DIR="${SCRIPT_DIR}/backups"
+BACKGROUND_DIR="${SCRIPT_DIR}/assets/backgrounds"
+LOCAL_CONTAINER_DATA_DIR="${HOME}/.local/share/yaml-toolbox/containers"
+
+# Offline content is created in the directory from which this script is run.
+REPOS_DIR="${RUN_DIR}/repos"
+CONTAINERS_DIR="${REPOS_DIR}/containers"
+PYTHON_REPO_DIR="${REPOS_DIR}/python"
+LIBRARIES_DIR="${REPOS_DIR}/libraries"
+
+if [[ -r /etc/os-release ]]; then
+    # ID and VERSION_ID are supplied by the operating system.
+    source /etc/os-release
+fi
+SYSTEM_ID="${ID:-linux}"
+SYSTEM_VERSION="${VERSION_ID:-unknown}"
+if command -v rpm >/dev/null 2>&1; then
+    SYSTEM_ARCH="$(rpm --eval '%{_arch}')"
+elif command -v dpkg >/dev/null 2>&1; then
+    SYSTEM_ARCH="$(dpkg --print-architecture)"
+else
+    SYSTEM_ARCH="$(uname -m)"
+fi
+SYSTEM_REPO_DIR="${LIBRARIES_DIR}/${SYSTEM_ID}-${SYSTEM_VERSION}-${SYSTEM_ARCH}"
+
+MODE="prepare"
+OFFLINE_ONLY=false
+
+usage() {
+    cat <<EOF
+Usage: $0 [OPTION]
+
+  --prepare               Prepare this computer from online sources (default)
+  --offline               Prepare using only ./repos
+  --download-repos        Download offline content into ./repos
+  --download-and-prepare  Download ./repos, then prepare from those files
+  -h, --help              Show this help
+EOF
+}
+
+choose_mode() {
+    printf '\nYAML Deployment Toolbox Setup\n'
+    printf '─────────────────────────────\n'
+    printf '1. Prepare this computer (online)\n'
+    printf '2. Prepare from ./repos (offline)\n'
+    printf '3. Download/update ./repos for offline use\n'
+    printf '4. Download ./repos, then prepare from those files\n'
+    printf '5. Exit\n\n'
+    read -r -p 'Select an option [1-5]: ' selection
+
+    case "${selection}" in
+        1) MODE="prepare" ;;
+        2) MODE="prepare"; OFFLINE_ONLY=true ;;
+        3) MODE="download" ;;
+        4) MODE="download-and-prepare" ;;
+        5) exit 0 ;;
+        *) printf 'Invalid selection.\n' >&2; exit 2 ;;
+    esac
+}
+
+if [[ $# -eq 0 && -t 0 ]]; then
+    choose_mode
+elif [[ $# -gt 1 ]]; then
+    usage >&2
+    exit 2
+else
+    case "${1:---prepare}" in
+        --prepare) MODE="prepare" ;;
+        --offline) MODE="prepare"; OFFLINE_ONLY=true ;;
+        --download-repos) MODE="download" ;;
+        --download-and-prepare) MODE="download-and-prepare" ;;
+        -h|--help) usage; exit 0 ;;
+        *) usage >&2; exit 2 ;;
+    esac
+fi
+
+log() {
+    printf '\n[%s] %s\n' "$(date '+%H:%M:%S')" "$*"
+}
+
+fail() {
+    printf '\nERROR: %s\n' "$*" >&2
+    exit 1
+}
+
+run_as_root() {
+    if [[ "${EUID}" -eq 0 ]]; then
+        "$@"
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo "$@"
+    else
+        fail "Root access is required, but sudo is unavailable."
+    fi
+}
+
+create_project_layout() {
+    # Portable project content stays beside the toolbox. Active container data
+    # stays on the computer's local disk instead of the removable drive.
+    mkdir -p \
+        "${SCRIPT_DIR}/menus" \
+        "${SCRIPT_DIR}/variables" \
+        "${SCRIPT_DIR}/assets/icons" \
+        "${BACKGROUND_DIR}" \
+        "${PCAP_DIR}" \
+        "${BACKUPS_DIR}/openproject" \
+        "${BACKUPS_DIR}/etherpad" \
+        "${BACKUPS_DIR}/nextcloud" \
+        "${BACKUPS_DIR}/ctfd" \
+        "${BACKUPS_DIR}/portainer" \
+        "${LOCAL_CONTAINER_DATA_DIR}/openproject" \
+        "${LOCAL_CONTAINER_DATA_DIR}/etherpad" \
+        "${LOCAL_CONTAINER_DATA_DIR}/nextcloud" \
+        "${LOCAL_CONTAINER_DATA_DIR}/ctfd" \
+        "${LOCAL_CONTAINER_DATA_DIR}/portainer"
+}
+
+create_repo_layout() {
+    create_project_layout
+    mkdir -p "${CONTAINERS_DIR}" "${PYTHON_REPO_DIR}" "${SYSTEM_REPO_DIR}"
+}
+
+download_python_repo() {
+    local staging_dir
+    command -v python3 >/dev/null 2>&1 || fail "python3 is required to download Python wheels."
+    [[ -f "${REQUIREMENTS_FILE}" ]] || fail "Missing ${REQUIREMENTS_FILE}."
+
+    if ! python3 -m pip --version >/dev/null 2>&1; then
+        if command -v dnf >/dev/null 2>&1; then
+            run_as_root dnf install -y python3-pip
+        elif command -v apt-get >/dev/null 2>&1; then
+            run_as_root apt-get update
+            run_as_root env DEBIAN_FRONTEND=noninteractive apt-get install -y python3-pip
+        else
+            fail "pip is required to download Python wheels."
+        fi
+    fi
+
+    log "Downloading Python wheels to ${PYTHON_REPO_DIR}"
+    staging_dir="$(mktemp -d)"
+    python3 -m pip download \
+        --only-binary=:all: \
+        --dest "${staging_dir}" \
+        -r "${REQUIREMENTS_FILE}"
+
+    compgen -G "${staging_dir}/*.whl" >/dev/null 2>&1 || \
+        fail "No Python wheels were downloaded. Existing repository files were preserved."
+
+    # Replace only wheel artifacts after the complete new set is available.
+    find "${PYTHON_REPO_DIR}" -maxdepth 1 -type f -name '*.whl' -delete
+    find "${staging_dir}" -maxdepth 1 -type f -name '*.whl' \
+        -exec mv -- {} "${PYTHON_REPO_DIR}/" \;
+    rmdir "${staging_dir}"
+    echo "Removed obsolete Python wheels."
+}
+
+download_system_repo() {
+    local staging_dir
+    log "Downloading system libraries to ${SYSTEM_REPO_DIR}"
+    staging_dir="$(mktemp -d)"
+
+    if command -v dnf >/dev/null 2>&1; then
+        if ! dnf download --help >/dev/null 2>&1; then
+            run_as_root dnf install -y dnf-plugins-core
+        fi
+        dnf download \
+            --resolve \
+            --alldeps \
+            --setopt=install_weak_deps=False \
+            --destdir "${staging_dir}" \
+            python3 python3-pip python3-tkinter tcpreplay
+    elif command -v apt-get >/dev/null 2>&1; then
+        run_as_root apt-get update
+        run_as_root env DEBIAN_FRONTEND=noninteractive apt-get install -y apt-rdepends
+
+        local required_packages=(python3 python3-pip python3-venv python3-tk tcpreplay)
+        local dependency_packages=()
+        local downloadable_packages=()
+        local package
+        local candidate_version
+
+        mapfile -t dependency_packages < <(
+            # Follow hard requirements only. Recommends and Suggests pull in
+            # large optional font families that Tkinter does not require.
+            apt-rdepends \
+                --follow=Depends,PreDepends \
+                --show=Depends,PreDepends \
+                "${required_packages[@]}" 2>/dev/null |
+                awk '/^[[:alnum:]][[:alnum:].+:_-]*$/ {sub(/:any$/, ""); print}' |
+                sort -u
+        )
+
+        for package in "${dependency_packages[@]}"; do
+            # apt-rdepends expands every package in an A|B font-provider
+            # choice. Keep one compact, complete UI font family instead of
+            # downloading every equivalent provider.
+            if [[ "${package}" == fonts-* \
+                && "${package}" != "fonts-dejavu-core" \
+                && "${package}" != "fonts-dejavu-mono" ]]; then
+                continue
+            fi
+
+            candidate_version="$(
+                apt-cache policy "${package}" 2>/dev/null |
+                    awk '/Candidate:/ {print $2; exit}'
+            )"
+            if [[ -n "${candidate_version}" && "${candidate_version}" != "(none)" ]]; then
+                downloadable_packages+=("${package}=${candidate_version}")
+            fi
+        done
+
+        [[ ${#downloadable_packages[@]} -gt 0 ]] || \
+            fail "APT dependency resolution returned no downloadable packages."
+
+        (
+            cd "${staging_dir}"
+            apt-get download "${downloadable_packages[@]}"
+        )
+        echo "Kept DejaVu Core/Mono; skipped equivalent optional font providers."
+    else
+        fail "System-library download requires dnf or apt-get."
+    fi
+
+    if compgen -G "${staging_dir}/*.rpm" >/dev/null 2>&1; then
+        find "${SYSTEM_REPO_DIR}" -maxdepth 1 -type f -name '*.rpm' -delete
+        find "${staging_dir}" -maxdepth 1 -type f -name '*.rpm' \
+            -exec mv -- {} "${SYSTEM_REPO_DIR}/" \;
+    elif compgen -G "${staging_dir}/*.deb" >/dev/null 2>&1; then
+        find "${SYSTEM_REPO_DIR}" -maxdepth 1 -type f -name '*.deb' -delete
+        find "${staging_dir}" -maxdepth 1 -type f -name '*.deb' \
+            -exec mv -- {} "${SYSTEM_REPO_DIR}/" \;
+    else
+        fail "No system packages were downloaded. Existing repository files were preserved."
+    fi
+    rmdir "${staging_dir}"
+    echo "Removed obsolete packages from the current OS repository."
+}
+
+download_repositories() {
+    create_repo_layout
+    download_python_repo
+    download_system_repo
+
+    printf '\nOffline repositories are ready at:\n  %s\n' "${REPOS_DIR}"
+    printf '\nContents:\n'
+    printf '  containers/  Empty placeholder for container downloads\n'
+    printf '  python/      Python wheels\n'
+    printf '  libraries/   OS-specific RPM or DEB dependency sets\n'
+    printf '                Current system: %s\n\n' "${SYSTEM_REPO_DIR}"
+}
+
+install_system_dependencies() {
+    log "Installing required system packages"
+
+    if [[ "${OFFLINE_ONLY}" == true ]]; then
+        if command -v dnf >/dev/null 2>&1; then
+            compgen -G "${SYSTEM_REPO_DIR}/*.rpm" >/dev/null 2>&1 || \
+                fail "No RPMs found in ${SYSTEM_REPO_DIR}. Run --download-repos on a matching online system first."
+            run_as_root dnf --disablerepo='*' install -y "${SYSTEM_REPO_DIR}"/*.rpm
+        elif command -v apt-get >/dev/null 2>&1; then
+            compgen -G "${SYSTEM_REPO_DIR}/*.deb" >/dev/null 2>&1 || \
+                fail "No DEBs found in ${SYSTEM_REPO_DIR}. Run --download-repos on a matching online system first."
+
+            # dpkg may configure packages out of order; the second command
+            # completes dependency configuration without network downloads.
+            run_as_root dpkg -i "${SYSTEM_REPO_DIR}"/*.deb || true
+            run_as_root apt-get --no-download --fix-broken install -y
+        else
+            fail "Offline system installation requires dnf or apt-get."
+        fi
+    elif command -v dnf >/dev/null 2>&1; then
+        run_as_root dnf install -y \
+            --setopt=install_weak_deps=False \
+            python3 python3-pip python3-tkinter tcpreplay
+    elif command -v apt-get >/dev/null 2>&1; then
+        run_as_root apt-get update
+        run_as_root env DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            --no-install-recommends \
+            python3 python3-pip python3-venv python3-tk tcpreplay
+    else
+        fail "Supported package manager not found. Install Python 3, pip, venv, and Tkinter manually."
+    fi
+}
+
+prepare_application() {
+    create_project_layout
+
+    local needs_system_dependencies=false
+    if ! command -v python3 >/dev/null 2>&1; then
+        needs_system_dependencies=true
+    elif ! python3 -c 'import tkinter' >/dev/null 2>&1; then
+        needs_system_dependencies=true
+    elif ! python3 -m venv --help >/dev/null 2>&1; then
+        needs_system_dependencies=true
+    elif ! command -v tcpreplay >/dev/null 2>&1; then
+        needs_system_dependencies=true
+    fi
+
+    if [[ "${needs_system_dependencies}" == true ]]; then
+        install_system_dependencies
+    fi
+
+    command -v python3 >/dev/null 2>&1 || fail "python3 is unavailable after setup."
+    python3 -c 'import tkinter' >/dev/null 2>&1 || fail "Python Tkinter support is unavailable."
+    command -v tcpreplay >/dev/null 2>&1 || fail "tcpreplay is unavailable after setup."
+    [[ -f "${REQUIREMENTS_FILE}" ]] || fail "Missing ${REQUIREMENTS_FILE}."
+    [[ -f "${MAIN_FILE}" ]] || fail "Missing ${MAIN_FILE}."
+
+    log "Creating the project virtual environment"
+    if [[ ! -x "${VENV_DIR}/bin/python" ]]; then
+        python3 -m venv "${VENV_DIR}"
+    fi
+
+    local venv_python="${VENV_DIR}/bin/python"
+    log "Installing Python dependencies"
+    export PIP_DISABLE_PIP_VERSION_CHECK=1
+    if [[ "${OFFLINE_ONLY}" == true ]]; then
+        local wheel_dir=""
+        for candidate in \
+            "${PYTHON_REPO_DIR}" \
+            "${SCRIPT_DIR}/repos/python" \
+            "${SCRIPT_DIR}/wheelhouse" \
+            "${SCRIPT_DIR}/packages/python"; do
+            if compgen -G "${candidate}/*.whl" >/dev/null 2>&1; then
+                wheel_dir="${candidate}"
+                break
+            fi
+        done
+
+        [[ -n "${wheel_dir}" ]] || \
+            fail "Offline mode requires .whl files in ${PYTHON_REPO_DIR}."
+        echo "Using offline Python packages from: ${wheel_dir}"
+        "${venv_python}" -m pip install \
+            --no-index \
+            --find-links "${wheel_dir}" \
+            -r "${REQUIREMENTS_FILE}"
+    else
+        echo "Using online Python package sources (local wheels are ignored)."
+        "${venv_python}" -m pip install \
+            --no-cache-dir \
+            --upgrade \
+            --upgrade-strategy only-if-needed \
+            -r "${REQUIREMENTS_FILE}"
+    fi
+
+    log "Validating Python modules and YAML files"
+    export TOOLBOX_PROJECT_DIR="${SCRIPT_DIR}"
+    "${venv_python}" - <<'PY'
+from pathlib import Path
+import os
+import sys
+
+import customtkinter
+import tkinter
+import yaml
+import cryptography
+import paramiko
+from PIL import Image
+
+project_dir = Path(os.environ["TOOLBOX_PROJECT_DIR"])
+# Setup may be invoked from outside the project directory.
+sys.path.insert(0, str(project_dir))
+from execution_engines.main import ExecutionEngine
+from execution_engines.result import ExecutionResult
+
+# Building the dispatcher imports all menu engines without running any actions.
+engine = ExecutionEngine(base_dir=project_dir)
+if not engine.actions or not all(callable(handler) for handler in engine.actions.values()):
+    raise SystemExit("Execution engine action registration is invalid")
+if ExecutionResult().returncode != 0:
+    raise SystemExit("Execution engine result type is invalid")
+
+menu_dir = project_dir / "menus"
+if not menu_dir.is_dir():
+    raise SystemExit(f"Missing menu directory: {menu_dir}")
+
+yaml_files = sorted((*menu_dir.glob("*.yaml"), *menu_dir.glob("*.yml")))
+if not yaml_files:
+    raise SystemExit(f"No YAML files found in {menu_dir}")
+
+for yaml_file in yaml_files:
+    with yaml_file.open("r", encoding="utf-8") as stream:
+        document = yaml.safe_load(stream)
+    if not isinstance(document, dict):
+        raise SystemExit(f"{yaml_file.name}: YAML root must be a mapping")
+
+print(f"Validated {len(yaml_files)} YAML file(s).")
+print("CustomTkinter, Tkinter, PyYAML, Pillow, cryptography, and Paramiko imports succeeded.")
+print(f"Execution engines loaded successfully ({len(engine.actions)} registered actions).")
+PY
+
+    log "Creating the launcher"
+    cat > "${LAUNCHER_FILE}" <<'LAUNCHER'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+APP_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+exec "${APP_DIR}/.venv/bin/python" "${APP_DIR}/main.py" "$@"
+LAUNCHER
+    chmod 0755 "${LAUNCHER_FILE}"
+
+    local completion_time
+    local python_version
+    local customtkinter_version
+    local pyyaml_version
+    local pillow_version
+    local yaml_count
+    local setup_type
+    completion_time="$(date --iso-8601=seconds)"
+    python_version="$("${venv_python}" --version 2>&1)"
+    customtkinter_version="$("${venv_python}" -c 'import customtkinter; print(customtkinter.__version__)')"
+    pyyaml_version="$("${venv_python}" -c 'import yaml; print(yaml.__version__)')"
+    pillow_version="$("${venv_python}" -c 'from PIL import __version__; print(__version__)')"
+    yaml_count="$(find "${SCRIPT_DIR}/menus" -maxdepth 1 -type f \( -name '*.yaml' -o -name '*.yml' \) | wc -l)"
+    if [[ "${OFFLINE_ONLY}" == true ]]; then
+        setup_type="Offline installation from ./repos"
+    else
+        setup_type="Online/local installation"
+    fi
+
+    cat > "${SCRIPT_DIR}/.setup-complete" <<EOF
+YAML Deployment Toolbox setup completed successfully.
+
+Completed: ${completion_time}
+Mode: ${setup_type}
+Host: $(hostname)
+Operating system: ${PRETTY_NAME:-${SYSTEM_ID}-${SYSTEM_VERSION}}
+Architecture: ${SYSTEM_ARCH}
+Python: ${python_version}
+CustomTkinter: ${customtkinter_version}
+PyYAML: ${pyyaml_version}
+Pillow: ${pillow_version}
+YAML files validated: ${yaml_count}
+Execution engines: ${SCRIPT_DIR}/execution_engines (imports and dispatcher validated)
+Virtual environment: ${VENV_DIR}
+Launcher: ${LAUNCHER_FILE}
+EOF
+
+    printf '\nSetup completed successfully.\n'
+    printf 'Setup record: %s\n\n' "${SCRIPT_DIR}/.setup-complete"
+    sed 's/^/  /' "${SCRIPT_DIR}/.setup-complete"
+    printf '\nStart the application with:\n  %s\n\n' "${LAUNCHER_FILE}"
+}
+
+case "${MODE}" in
+    download)
+        download_repositories
+        ;;
+    download-and-prepare)
+        download_repositories
+        OFFLINE_ONLY=true
+        prepare_application
+        ;;
+    prepare)
+        prepare_application
+        ;;
+esac
