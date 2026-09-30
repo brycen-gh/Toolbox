@@ -1,0 +1,17 @@
+# The contents of these folders are for local repos. To reduce file size, you can download them yourself.
+repos/*
+backups/
+variables/.service-secrets.json
+run_toolbox.*
+.setup-complete
+__pycache__/
+.venv
+.whats-next.md
+.git-tips
+tests/*
+docs/
+__init__.py
+tests/
+github
+github.pub
+scripts/push-initial.sh

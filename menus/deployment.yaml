@@ -1,0 +1,435 @@
+# Menu layout: labels and children form the sidebar; action_id selects a registered handler.
+# Parameters may reference values from VariablesFile using ${VARIABLE_NAME}.
+title: Deployment
+
+# ========================================================================
+# MENU OVERVIEW
+# ========================================================================
+Home:
+  label: Deployment Toolbox
+  icon: deployment
+  content: |
+    # Deployment Toolbox
+
+    Install and manage the services used by this environment.
+
+    Use the search field to find an action. Search is case-insensitive and
+    supports shell-style wildcards: `*docker*`, `install*`, `?tfd`, and
+    `[NU]*cloud*`.
+
+    Review each action before running it. Installation and deployment actions
+    display a confirmation prompt before making changes.
+
+VariablesFile: deployment-variables.yaml
+
+menu:
+  # ======================================================================
+  # SYSTEM READINESS
+  # ======================================================================
+  - label: System Readiness
+    icon: readiness
+    content: Inspect this host before installing services.
+    children:
+      - label: Show System Info
+        icon: system
+        content: Show the detected Linux distribution, Docker path, and project directory.
+        action_id: system_info
+
+      - label: Check Docker Status
+        icon: docker
+        content: Display the Docker server version and currently running containers.
+        action_id: docker_status
+
+  # ======================================================================
+  # PREP INSTALL
+  # ======================================================================
+  - label: Prep Install
+    icon: computer
+    content: Prepare this Linux host for container deployments.
+    children:
+      - label: Variable Settings
+        icon: variables
+        content: Set the portable image archive directory and download retry limit.
+        special: variables_editor
+        variable_keys:
+          - CONTAINER_IMAGE_ARCHIVE_ROOT
+          - CONTAINER_IMAGE_PULL_ATTEMPTS
+
+      - label: Install Docker
+        icon: docker
+        content: |
+          Install Docker Engine and the Compose plugin, then enable the Docker service.
+          Rocky/RHEL-family and Debian/Ubuntu-family systems are supported.
+        action_id: install_docker
+        confirm: true
+        confirm_message: Install Docker packages and enable the Docker service?
+
+      - label: Save/Update Images
+        icon: download
+        content: Pull configured images and export portable docker image TAR archives under ./repos/containers. This will take a long while, depending on your network speed. (~1GB per image))
+        action_id: pull_images
+        confirm: true
+        confirm_message: Download and export the latest configured container images?
+        parameters:
+          directory: "${CONTAINER_IMAGE_ARCHIVE_ROOT}"
+          pull_attempts: "${CONTAINER_IMAGE_PULL_ATTEMPTS}"
+          images:
+            - "${HOME_IMAGE}"
+            - "${OPENPROJECT_IMAGE}"
+            - "${ETHERPAD_IMAGE}"
+            - "${NEXTCLOUD_IMAGE}"
+            - "${CTFD_IMAGE}"
+            - "${PORTAINER_IMAGE}"
+            - "${ZULIP_IMAGE}"
+            - "${ZULIP_DATABASE_IMAGE}"
+            - "${ZULIP_MEMCACHED_IMAGE}"
+            - "${ZULIP_RABBITMQ_IMAGE}"
+            - "${ZULIP_REDIS_IMAGE}"
+
+      - label: Load Saved Images
+        icon: containers
+        content: Load all portable Docker image TAR archives from ./repos/containers.
+        action_id: load_images
+        confirm: true
+        confirm_message: Load the saved Docker images into this computer?
+        parameters:
+          directory: "${CONTAINER_IMAGE_ARCHIVE_ROOT}"
+
+  # ======================================================================
+  # CONTAINERS
+  # ======================================================================
+  - label: Containers
+    icon: containers
+    content: Deploy applications using container data stored on this computer's local disk.
+    children:
+      - label: Variable Settings
+        icon: variables
+        content: Edit shared local data and backup paths. Open a service subsection to edit its own variables.
+        special: variables_editor
+        variable_keys:
+          - CONTAINER_DATA_ROOT
+          - BACKUP_DIRECTORY
+
+      # ------------------------------------------------------------------
+      # HOME
+      # ------------------------------------------------------------------
+      - label: Home
+        icon: home
+        content: A browser portal for service links and offline help, on port 8088 by default.
+        children:
+          - label: Variable Settings
+            icon: variables
+            special: variables_editor
+            variable_prefixes: [HOME_]
+            content: Set the portal port, image, data directory and public hostname. Use auto to follow the browser hostname.
+          - label: Install Home
+            icon: home
+            action_id: deploy_home
+            confirm: true
+            content: Generate public service links and help pages, then deploy Home. Enable HOME_RECREATE to update an existing portal. Service passwords and setup tokens are never published.
+
+      # ------------------------------------------------------------------
+      # OPENPROJECT
+      # ------------------------------------------------------------------
+      - label: OpenProject
+        icon: project
+        content: Install and configure OpenProject.
+        children:
+          - label: Variable Settings
+            icon: variables
+            content: Edit variables/docker_variables/open_project.yaml for this service.
+            special: variables_editor
+            variable_prefixes: [OPENPROJECT_]
+
+          - label: Install OpenProject
+            icon: project
+            content: Deploy OpenProject on the configured host port.
+            action_id: deploy_open_project
+            confirm: true
+
+      # ------------------------------------------------------------------
+      # ETHERPAD
+      # ------------------------------------------------------------------
+      - label: Etherpad
+        icon: document
+        content: Install and configure Etherpad.
+        children:
+          - label: Variable Settings
+            icon: variables
+            content: Edit variables/docker_variables/etherpad.yaml for this service.
+            special: variables_editor
+            variable_prefixes: [ETHERPAD_]
+
+          - label: Install Etherpad
+            icon: document
+            content: Deploy Etherpad on the configured host port.
+            action_id: deploy_etherpad
+            confirm: true
+
+      # ------------------------------------------------------------------
+      # NEXTCLOUD
+      # ------------------------------------------------------------------
+      - label: Nextcloud
+        icon: cloud
+        content: Install and configure Nextcloud.
+        children:
+          - label: Variable Settings
+            icon: variables
+            content: Edit variables/docker_variables/nextcloud.yaml for this service.
+            special: variables_editor
+            variable_prefixes: [NEXTCLOUD_]
+
+          - label: Install Nextcloud
+            icon: cloud
+            content: Deploy Nextcloud on the configured host port.
+            action_id: deploy_nextcloud
+            confirm: true
+
+      # ------------------------------------------------------------------
+      # CTFD
+      # ------------------------------------------------------------------
+      - label: CTFd
+        icon: flag
+        content: Install and configure CTFd.
+        children:
+          - label: Variable Settings
+            icon: variables
+            content: Edit variables/docker_variables/ctfd.yaml for this service.
+            special: variables_editor
+            variable_prefixes: [CTFD_]
+
+          - label: Install CTFd
+            icon: flag
+            content: |
+              Deploy a single-node CTFd starter instance with a generated secret key.
+              For production, use CTFd's official multi-service Compose deployment.
+            action_id: deploy_ctfd
+            confirm: true
+
+      # ------------------------------------------------------------------
+      # PORTAINER
+      # ------------------------------------------------------------------
+      - label: Portainer
+        icon: portainer
+        content: Install and configure Portainer.
+        children:
+          - label: Variable Settings
+            icon: variables
+            content: Edit variables/docker_variables/portainer.yaml for this service.
+            special: variables_editor
+            variable_prefixes: [PORTAINER_]
+
+          - label: Install Portainer
+            icon: portainer
+            content: Deploy Portainer on HTTPS port 9443.
+            action_id: deploy_portainer
+            confirm: true
+
+      # ------------------------------------------------------------------
+      # ZULIP
+      # ------------------------------------------------------------------
+      - label: Zulip
+        icon: containers
+        content: Install and configure Zulip.
+        children:
+          - label: Variable Settings
+            icon: variables
+            content: Edit variables/docker_variables/zulip.yaml for this service.
+            special: variables_editor
+            variable_prefixes: [ZULIP_]
+
+          - label: Install Zulip
+            icon: containers
+            content: |
+              Deploy Zulip and its PostgreSQL, Memcached, RabbitMQ, and Redis dependencies.
+              Requires Docker Compose v2. First use Save/Update Images or Load Saved Images.
+              Set ZULIP_EXTERNAL_HOST and ZULIP_ADMINISTRATOR in Variable Settings.
+              HTTPS defaults to port 8443 with a self-signed training certificate.
+              Existing stacks require ZULIP_RECREATE; back up before applying changes.
+              Compose updates do not provide automatic rollback. Setup may take several minutes.
+            action_id: deploy_zulip
+            confirm: true
+            confirm_message: Initialize or update the local Zulip stack using the configured settings? Back up existing data first.
+
+          - label: Zulip Create Organization Link
+            icon: add
+            content: Generate a private organization-creation link after installing Zulip. Open it in your browser to create the organization and administrator account.
+            action_id: zulip_organization_link
+            confirm: true
+            confirm_message: Generate a new Zulip organization-creation link?
+            parameters:
+              name: "${ZULIP_CONTAINER_NAME}"
+
+      - label: Backups
+        icon: save
+        content: Create and load versioned backups for each managed container.
+        children:
+          - label: OpenProject
+            icon: project
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Create a new timestamped OpenProject data backup.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause OpenProject and create a new backup version?
+                parameters:
+                  data_directory: "${OPENPROJECT_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/openproject"
+                  archive_prefix: openproject
+                  containers: ["${OPENPROJECT_CONTAINER_NAME}"]
+
+              - label: Load Backup
+                icon: download
+                content: Select any OpenProject backup found in ./backups/openproject.
+                special: backup_selector
+                parameters:
+                  data_directory: "${OPENPROJECT_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/openproject"
+                  containers: ["${OPENPROJECT_CONTAINER_NAME}"]
+
+          - label: Etherpad
+            icon: document
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Create a new timestamped Etherpad data backup.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause Etherpad and create a new backup version?
+                parameters:
+                  data_directory: "${ETHERPAD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/etherpad"
+                  archive_prefix: etherpad
+                  containers: ["${ETHERPAD_CONTAINER_NAME}"]
+
+              - label: Load Backup
+                icon: download
+                content: Select any Etherpad backup found in ./backups/etherpad.
+                special: backup_selector
+                parameters:
+                  data_directory: "${ETHERPAD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/etherpad"
+                  containers: ["${ETHERPAD_CONTAINER_NAME}"]
+
+          - label: Nextcloud
+            icon: cloud
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Create a new timestamped Nextcloud data backup.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause Nextcloud and create a new backup version?
+                parameters:
+                  data_directory: "${NEXTCLOUD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/nextcloud"
+                  archive_prefix: nextcloud
+                  containers: ["${NEXTCLOUD_CONTAINER_NAME}"]
+
+              - label: Load Backup
+                icon: download
+                content: Select any Nextcloud backup found in ./backups/nextcloud.
+                special: backup_selector
+                parameters:
+                  data_directory: "${NEXTCLOUD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/nextcloud"
+                  containers: ["${NEXTCLOUD_CONTAINER_NAME}"]
+
+          - label: CTFd
+            icon: flag
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Create a new timestamped CTFd data backup.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause CTFd and create a new backup version?
+                parameters:
+                  data_directory: "${CTFD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/ctfd"
+                  archive_prefix: ctfd
+                  containers: ["${CTFD_CONTAINER_NAME}"]
+
+              - label: Load Backup
+                icon: download
+                content: Select any CTFd backup found in ./backups/ctfd.
+                special: backup_selector
+                parameters:
+                  data_directory: "${CTFD_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/ctfd"
+                  containers: ["${CTFD_CONTAINER_NAME}"]
+
+          - label: Zulip
+            icon: containers
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Stop all five Zulip containers and archive the entire stack directory, including database, uploads, configuration, and secrets. Previously running containers are restarted afterward.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause the full Zulip stack and create a backup containing private credentials and data?
+                parameters:
+                  data_directory: "${ZULIP_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/zulip"
+                  archive_prefix: zulip
+                  containers: ["${ZULIP_CONTAINER_NAME}", "${ZULIP_CONTAINER_NAME}-database", "${ZULIP_CONTAINER_NAME}-memcached", "${ZULIP_CONTAINER_NAME}-rabbitmq", "${ZULIP_CONTAINER_NAME}-redis"]
+
+              - label: Load Backup
+                icon: download
+                content: Restore a full Zulip stack backup to the same data path using matching image versions. All five containers must exist. Restore replaces the data directory and retains its previous contents beside it for recovery.
+                special: backup_selector
+                restore_action_id: restore_zulip
+                parameters:
+                  data_directory: "${ZULIP_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/zulip"
+                  containers: ["${ZULIP_CONTAINER_NAME}", "${ZULIP_CONTAINER_NAME}-database", "${ZULIP_CONTAINER_NAME}-memcached", "${ZULIP_CONTAINER_NAME}-rabbitmq", "${ZULIP_CONTAINER_NAME}-redis"]
+
+          - label: Portainer
+            icon: portainer
+            children:
+              - label: Manual Backup
+                icon: save
+                content: Create a new timestamped Portainer data backup.
+                action_id: backup_container_data
+                confirm: true
+                confirm_message: Pause Portainer and create a new backup version?
+                parameters:
+                  data_directory: "${PORTAINER_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/portainer"
+                  archive_prefix: portainer
+                  containers: ["${PORTAINER_CONTAINER_NAME}"]
+
+              - label: Load Backup
+                icon: download
+                content: Select any Portainer backup found in ./backups/portainer.
+                special: backup_selector
+                parameters:
+                  data_directory: "${PORTAINER_DATA_VOLUME}"
+                  backup_directory: "${BACKUP_DIRECTORY}/portainer"
+                  containers: ["${PORTAINER_CONTAINER_NAME}"]
+
+  # ======================================================================
+  # SETTINGS
+  # ======================================================================
+  - label: Settings
+    icon: settings
+    children:
+      - label: Show / Hide Items
+        icon: settings
+        content: Choose which actions and sections appear in this menu. Settings stays available to restore hidden items.
+        special: menu_visibility
+
+      - label: About
+        icon: information
+        content: |
+          YAML Deployment Toolbox
+
+          Menu configuration is kept in menus/deployment.yaml. Editable
+          shared values are kept in variables/deployment-variables.yaml, with
+          each container's settings in its own file under variables/docker_variables/.
+          Active service data defaults to ~/.local/share/yaml-toolbox/containers
+          on the computer's local disk. Versioned backups are stored by service
+          under ./backups, while image archives remain in ./repos/containers.
+          Privileged operations are implemented as allow-listed actions in
+          execution_engines/main.py.

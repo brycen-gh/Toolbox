@@ -1,0 +1,636 @@
+# Menu layout: labels and children form the sidebar; action_id selects a registered handler.
+# Parameters may reference values from VariablesFile using ${VARIABLE_NAME}.
+title: Troubleshooting
+
+# ========================================================================
+# MENU OVERVIEW
+# ========================================================================
+Home:
+  label: Troubleshooting
+  icon: readiness
+  content: |
+    # Docker and SecOnion Troubleshooting
+
+    Run diagnostics against this computer or a remote Linux host.
+
+    Set TARGET_MODE to local or remote in Variable Settings. Remote usernames
+    and passwords are stored only as encrypted values. The vault passphrase is
+    never saved and is requested once per application session.
+
+    Most actions are read-only. Bulk container stop/removal and SecOnion
+    Check-in change the target system and require confirmation.
+
+VariablesFile: troubleshooting-variables.yaml
+
+menu:
+  # ======================================================================
+  # DOCKER CLEANUP
+  # ======================================================================
+  - label: Docker Cleanup
+    icon: docker
+    content: Inspect Docker and manage containers on the selected host. Bulk stop and removal actions require confirmation.
+    children:
+      - label: Stop All Containers
+        icon: reset
+        content: Stop every running Docker container on the selected host, including containers outside Toolbox. Containers and their data remain available to restart.
+        action_id: troubleshoot_docker
+        confirm: true
+        confirm_message: Stop ALL running Docker containers on the selected host, including services outside Toolbox?
+        confirm_phrase: STOP ALL CONTAINERS
+        parameters:
+          mode: containers_stop_all
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          use_sudo: "${DOCKER_USE_SUDO}"
+
+      - label: Remove All Containers
+        icon: delete
+        content: Force-remove every Docker container on the selected host, including running containers and services outside Toolbox. Container writable-layer data is deleted. Images, volumes, and bind-mounted host files are retained.
+        action_id: troubleshoot_docker
+        confirm: true
+        confirm_message: Permanently remove ALL Docker containers on the selected host and discard their writable-layer data?
+        confirm_phrase: REMOVE ALL CONTAINERS
+        parameters:
+          mode: containers_remove_all
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          use_sudo: "${DOCKER_USE_SUDO}"
+
+      - label: Engine Health
+        icon: readiness
+        content: Show Docker versions, daemon information, storage drivers, and disk usage.
+        action_id: troubleshoot_docker
+        parameters:
+          mode: engine
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          use_sudo: "${DOCKER_USE_SUDO}"
+          log_lines: "${LOG_LINES}"
+
+      - label: Image Diagnostics
+        icon: containers
+        content: List image digests and dangling images. If DOCKER_IMAGE is set, also inspect that image and show its history.
+        action_id: troubleshoot_docker
+        parameters:
+          mode: images
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          use_sudo: "${DOCKER_USE_SUDO}"
+          image: "${DOCKER_IMAGE}"
+          log_lines: "${LOG_LINES}"
+
+      - label: Container Status
+        icon: system
+        content: List all containers with complete status details and show recent Docker events.
+        action_id: troubleshoot_docker
+        parameters:
+          mode: containers
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          use_sudo: "${DOCKER_USE_SUDO}"
+          log_lines: "${LOG_LINES}"
+
+
+
+  # ======================================================================
+  # CONTAINER ACTIONS
+  # ======================================================================
+  - label: Container Actions
+    icon: document
+    content: Expand a configured Docker container to edit settings, read logs, restart, or remove it.
+    children:
+      # ==================================================================
+      # HOME
+      # ==================================================================
+      - label: Home
+        icon: home
+        children:
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: HOME
+          - label: Read Logs
+            icon: document
+            action_id: troubleshoot_docker
+            content: Inspect Home and read its web server logs.
+            parameters: &home_actions
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${HOME_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+          - label: Restart Container
+            icon: reset
+            action_id: troubleshoot_docker
+            content: Restart Home. To regenerate links, use Install Home with recreation enabled.
+            confirm: true
+            parameters:
+              <<: *home_actions
+              mode: container_restart
+          - label: Remove Container
+            icon: delete
+            action_id: troubleshoot_docker
+            content: Remove the Home container. Generated site snapshots and the image remain.
+            confirm: true
+            confirm_phrase: REMOVE CONTAINER
+            parameters:
+              <<: *home_actions
+              mode: container_remove
+      # ==================================================================
+      # ZULIP
+      # ==================================================================
+      - label: Zulip
+        icon: containers
+        children:
+          - label: Remove Container
+            icon: delete
+            content: Force-remove the Zulip container, even if running. Writable-layer data is deleted; images, volumes, and bind-mounted files remain. Only the Zulip web container is removed; its dependencies remain.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Remove the configured Zulip container and discard its writable-layer data? Only the Zulip web container is removed; its dependencies remain.
+            confirm_phrase: REMOVE CONTAINER
+            parameters:
+              mode: container_remove
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${ZULIP_CONTAINER_NAME}"
+
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: ZULIP
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the Zulip web container and read its recent logs. Use the dependency entries below for database, cache, and queue diagnostics.
+            action_id: troubleshoot_docker
+            parameters: &zulip_logs
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${ZULIP_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the Zulip web container. Dependency containers continue running.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the Zulip web container?
+            parameters:
+              <<: *zulip_logs
+              mode: container_restart
+
+          - label: PostgreSQL Logs
+            icon: document
+            action_id: troubleshoot_docker
+            parameters:
+              <<: *zulip_logs
+              container: "${ZULIP_CONTAINER_NAME}-database"
+
+          - label: Memcached Logs
+            icon: document
+            action_id: troubleshoot_docker
+            parameters:
+              <<: *zulip_logs
+              container: "${ZULIP_CONTAINER_NAME}-memcached"
+
+          - label: RabbitMQ Logs
+            icon: document
+            action_id: troubleshoot_docker
+            parameters:
+              <<: *zulip_logs
+              container: "${ZULIP_CONTAINER_NAME}-rabbitmq"
+
+          - label: Redis Logs
+            icon: document
+            action_id: troubleshoot_docker
+            parameters:
+              <<: *zulip_logs
+              container: "${ZULIP_CONTAINER_NAME}-redis"
+
+      # ==================================================================
+      # OPENPROJECT
+      # ==================================================================
+      - label: OpenProject
+        icon: containers
+        children:
+          - label: Remove Container
+            icon: delete
+            content: Force-remove the OpenProject container, even if running. Writable-layer data is deleted; images, volumes, and bind-mounted files remain.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Remove the configured OpenProject container and discard its writable-layer data?
+            confirm_phrase: REMOVE CONTAINER
+            parameters:
+              mode: container_remove
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${OPENPROJECT_CONTAINER_NAME}"
+
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: OPENPROJECT
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the configured OpenProject container and read its recent timestamped logs.
+            action_id: troubleshoot_docker
+            parameters:
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${OPENPROJECT_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the configured OpenProject container, then display its resulting status.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the OpenProject container?
+            parameters:
+              mode: container_restart
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${OPENPROJECT_CONTAINER_NAME}"
+
+      # ==================================================================
+      # ETHERPAD
+      # ==================================================================
+      - label: Etherpad
+        icon: containers
+        children:
+          - label: Remove Container
+            icon: delete
+            content: Force-remove the Etherpad container, even if running. Writable-layer data is deleted; images, volumes, and bind-mounted files remain.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Remove the configured Etherpad container and discard its writable-layer data?
+            confirm_phrase: REMOVE CONTAINER
+            parameters:
+              mode: container_remove
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${ETHERPAD_CONTAINER_NAME}"
+
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: ETHERPAD
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the configured Etherpad container and read its recent timestamped logs.
+            action_id: troubleshoot_docker
+            parameters:
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${ETHERPAD_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the configured Etherpad container, then display its resulting status.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the Etherpad container?
+            parameters:
+              mode: container_restart
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${ETHERPAD_CONTAINER_NAME}"
+
+      # ==================================================================
+      # NEXTCLOUD
+      # ==================================================================
+      - label: Nextcloud
+        icon: containers
+        children:
+          - label: Remove Container
+            icon: delete
+            content: Force-remove the Nextcloud container, even if running. Writable-layer data is deleted; images, volumes, and bind-mounted files remain.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Remove the configured Nextcloud container and discard its writable-layer data?
+            confirm_phrase: REMOVE CONTAINER
+            parameters:
+              mode: container_remove
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${NEXTCLOUD_CONTAINER_NAME}"
+
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: NEXTCLOUD
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the configured Nextcloud container and read its recent timestamped logs.
+            action_id: troubleshoot_docker
+            parameters:
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${NEXTCLOUD_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the configured Nextcloud container, then display its resulting status.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the Nextcloud container?
+            parameters:
+              mode: container_restart
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${NEXTCLOUD_CONTAINER_NAME}"
+
+      # ==================================================================
+      # CTFD
+      # ==================================================================
+      - label: CTFd
+        icon: containers
+        children:
+          - label: Remove Container
+            icon: delete
+            content: Force-remove the CTFd container, even if running. Writable-layer data is deleted; images, volumes, and bind-mounted files remain.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Remove the configured CTFd container and discard its writable-layer data?
+            confirm_phrase: REMOVE CONTAINER
+            parameters:
+              mode: container_remove
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${CTFD_CONTAINER_NAME}"
+
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: CTFD
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the configured CTFd container and read its recent timestamped logs.
+            action_id: troubleshoot_docker
+            parameters:
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${CTFD_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the configured CTFd container, then display its resulting status.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the CTFd container?
+            parameters:
+              mode: container_restart
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${CTFD_CONTAINER_NAME}"
+
+      # ==================================================================
+      # PORTAINER
+      # ==================================================================
+      - label: Portainer
+        icon: containers
+        children:
+          - label: Remove Container
+            icon: delete
+            content: Force-remove the Portainer container, even if running. Writable-layer data is deleted; images, volumes, and bind-mounted files remain.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Remove the configured Portainer container and discard its writable-layer data?
+            confirm_phrase: REMOVE CONTAINER
+            parameters:
+              mode: container_remove
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${PORTAINER_CONTAINER_NAME}"
+
+          - label: Edit Container Settings
+            icon: settings
+            special: container_settings
+            service: PORTAINER
+
+          - label: Read Logs
+            icon: document
+            content: Inspect the configured Portainer container and read its recent timestamped logs.
+            action_id: troubleshoot_docker
+            parameters:
+              mode: container_logs
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${PORTAINER_CONTAINER_NAME}"
+              log_lines: "${LOG_LINES}"
+
+          - label: Restart Container
+            icon: reset
+            content: Restart the configured Portainer container, then display its resulting status.
+            action_id: troubleshoot_docker
+            confirm: true
+            confirm_message: Restart the Portainer container?
+            parameters:
+              mode: container_restart
+              target: "${TARGET_MODE}"
+              host: "${REMOTE_HOST}"
+              port: "${REMOTE_PORT}"
+              accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+              use_sudo: "${DOCKER_USE_SUDO}"
+              container: "${PORTAINER_CONTAINER_NAME}"
+
+
+  # ======================================================================
+  # SECONION
+  # ======================================================================
+  - label: SecOnion
+    icon: flag
+    content: Run common SecOnion status, resource, service, and log checks.
+    children:
+      - label: Variable Settings
+        icon: variables
+        content: Edit SecOnion service and log settings. Target and SSH settings are shared with Docker diagnostics in this menu.
+        special: variables_editor
+        variable_keys:
+          - TARGET_MODE
+          - REMOTE_HOST
+          - REMOTE_PORT
+          - REMOTE_ACCEPT_NEW_HOST_KEY
+          - SECURITY_ONION_SERVICE
+          - LOG_LINES
+
+      - label: Run so-status
+        icon: readiness
+        content: Run so-status and list SecOnion containers.
+        action_id: troubleshoot_security_onion
+        parameters:
+          mode: status
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          log_lines: "${LOG_LINES}"
+
+      - label: System Health
+        icon: system
+        content: Check load, memory, filesystem usage, Docker service health, and failed systemd services.
+        action_id: troubleshoot_security_onion
+        parameters:
+          mode: health
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          log_lines: "${LOG_LINES}"
+
+      - label: Read Core Logs
+        icon: document
+        content: Read recent Docker and Salt journals plus SecOnion Suricata and Kibana logs.
+        action_id: troubleshoot_security_onion
+        parameters:
+          mode: logs
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          log_lines: "${LOG_LINES}"
+
+      - label: Selected Service Logs
+        icon: document
+        content: Inspect SECURITY_ONION_SERVICE and read its latest Docker logs.
+        action_id: troubleshoot_security_onion
+        parameters:
+          mode: service_logs
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          service: "${SECURITY_ONION_SERVICE}"
+          log_lines: "${LOG_LINES}"
+
+      - label: Run SecOnion Check-in
+        icon: run
+        content: Run so-checkin to apply all Salt states. This can change services and configuration on the target.
+        action_id: troubleshoot_security_onion
+        confirm: true
+        confirm_message: Run a full SecOnion Salt check-in on the selected target?
+        parameters:
+          mode: checkin
+          target: "${TARGET_MODE}"
+          host: "${REMOTE_HOST}"
+          port: "${REMOTE_PORT}"
+          accept_new_host_key: "${REMOTE_ACCEPT_NEW_HOST_KEY}"
+          log_lines: "${LOG_LINES}"
+
+  # ======================================================================
+  # SETTINGS
+  # ======================================================================
+  - label: Settings
+    icon: settings
+    children:
+      - label: Variable Settings
+        icon: variables
+        content: Change shared target, SSH, Docker, and log settings. SecOnion service settings are under SecOnion; use Config Remote Creds for credentials.
+        special: variables_editor
+        variable_keys:
+          - TARGET_MODE
+          - REMOTE_HOST
+          - REMOTE_PORT
+          - REMOTE_ACCEPT_NEW_HOST_KEY
+          - DOCKER_USE_SUDO
+          - DOCKER_IMAGE
+          - LOG_LINES
+
+      - label: Config Remote Creds
+        icon: save
+        content: |
+          Prompt for an SSH username, SSH/sudo password, and vault passphrase.
+          Only encrypted credential values are written to variables/troubleshooting-variables.yaml.
+        action_id: configure_remote_credentials
+
+      - label: Lock Session Creds
+        icon: reset
+        content: Remove local sudo and decrypted remote creds from memory while preserving encrypted YAML values.
+        action_id: lock_remote_credentials
+
+      - label: Show / Hide Items
+        icon: settings
+        content: Choose which actions and sections appear in this menu. Settings stays available to restore hidden items.
+        special: menu_visibility
+
+      - label: About
+        icon: information
+        content: |
+          Troubleshooting actions can target this computer or a remote Linux
+          host. Editable values are kept in variables/troubleshooting-variables.yaml.
+          Remote creds are encrypted and the vault passphrase is never
+          written to disk.

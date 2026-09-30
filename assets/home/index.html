@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Home · Your lab starts here</title>
+  <link rel="stylesheet" href="style.css"><script src="portal.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="#">H<span>Home</span></a><nav aria-label="Main"><a href="#services">Services</a><a href="#help">Help &amp; guides</a></nav><span class="tag">TOOLBOX / LAB PORTAL</span></header>
+  <main>
+    <section class="hero"><p class="eyebrow">ONE PLACE TO BEGIN</p><h1>Your lab.<br><span>All together.</span></h1><p>Projects, conversations, files, and challenges.<br>Pick a workspace and make yourself at home.</p><a class="button" href="#services">Explore services <span aria-hidden="true">↗</span></a></section>
+    <section id="services"><div class="section-title"><h2>Your workspaces</h2><span>Choose where to go next</span></div><p class="muted">Links open configured services. Availability depends on what your instructor has deployed.</p><div id="cards" class="cards" aria-live="polite"><p>Loading service links…</p></div><noscript>Enable JavaScript to display service links. Help below remains available.</noscript></section>
+    <section id="help"><div class="section-title"><h2>A little help getting started</h2><span>FIELD GUIDE / 01</span></div>
+      <div class="help-grid"><article><h3>First time here?</h3><p>Open the service your instructor assigned. Each application has its own login. Ask your instructor for your account or invitation; this portal does not store credentials.</p></article><article><h3>A service won't open?</h3><p>Check you are connected to the lab network. Ask your instructor to check the container and published port in Toolbox. A service may still be starting. For HTTPS certificate messages, confirm the address and certificate with your instructor before proceeding.</p></article></div>
+      <details><summary>Projects, notes, files &amp; challenges</summary><p><strong>OpenProject:</strong> sign in with your assigned account and open your project. <strong>Etherpad:</strong> use the pad name or link supplied for your group. <strong>Nextcloud:</strong> sign in to access shared files. <strong>CTFd:</strong> follow your instructor's registration instructions, then open Challenges.</p></details>
+      <details><summary>Portainer &amp; Zulip first-time setup</summary><p><strong>Instructors:</strong> Portainer's first-time setup requires your configured setup token and a new administrator password. Find the token in Toolbox's Portainer settings or container logs. For Zulip, use Deployment → Containers → Zulip → Zulip Create Organization Link, then invite students. These setup credentials and private links are intentionally absent from this portal.</p><p>Zulip's external hostname must resolve on client computers. OpenProject's configured hostname and Nextcloud's trusted domains must also match the address students use.</p></details>
+      <details><summary>Capture and replay lab traffic</summary><p>In the desktop Toolbox, open Capture → Capture Traffic. Select the Ethernet or Wi-Fi adapter, choose a new .pcap file, and start. Stop Capture finishes the file. Wi-Fi monitor mode is not enabled.</p><p>For replay, put captures in repos/pcap, configure the Training menu entry and select TARGET_DEVICE under Training → Settings → Variable Settings. Replay is local, even when SecOnion is remote. WSL adapters may be virtual; use Linux with direct access to the adapter for physical Ethernet replay. Replay only on the assigned training network.</p></details>
+      <details><summary>Instructor maintenance &amp; offline use</summary><p>Use Toolbox's Container Actions to read logs, restart a service, or edit its saved settings. Back up service data before upgrades or resets. Changed deployment settings require recreation; restarting alone does not apply them.</p><p>Home works without internet after its image is loaded. Update service ports or the portal hostname in Toolbox, enable HOME_RECREATE, and run Install Home again to regenerate links. Students need network access to the portal and each service's port.</p></details>
+    </section>
+  </main><footer><strong>Home / Toolbox</strong><span>A shared starting point for your training lab.</span><a href="#">Back to top ↑</a></footer>
+</body></html>

@@ -1,0 +1,9 @@
+# Home portal deployment and public service links.
+Variables:
+  HOME_CONTAINER_NAME: toolbox-home
+  HOME_IMAGE: nginx:stable-alpine
+  HOME_RECREATE: false
+  HOME_RESTART_POLICY: unless-stopped
+  HOME_HOST_PORT: 8088
+  HOME_DATA_VOLUME: "${CONTAINER_DATA_ROOT}/home"
+  HOME_PUBLIC_HOST: auto

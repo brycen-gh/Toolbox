@@ -1,0 +1,14 @@
+# Editable settings; ${NAME} references are expanded when an action runs.
+Variables:
+  ZULIP_CONTAINER_NAME: zulip
+  ZULIP_IMAGE: ghcr.io/zulip/zulip-server:12.3-0
+  ZULIP_DATABASE_IMAGE: zulip/zulip-postgresql:14
+  ZULIP_MEMCACHED_IMAGE: memcached:alpine
+  ZULIP_RABBITMQ_IMAGE: rabbitmq:4.2
+  ZULIP_REDIS_IMAGE: redis:alpine
+  ZULIP_RECREATE: false
+  ZULIP_RESTART_POLICY: unless-stopped
+  ZULIP_HTTPS_HOST_PORT: 8443
+  ZULIP_EXTERNAL_HOST: "localhost.localdomain:${ZULIP_HTTPS_HOST_PORT}"
+  ZULIP_ADMINISTRATOR: admin@example.com
+  ZULIP_DATA_VOLUME: "${CONTAINER_DATA_ROOT}/zulip-stack"
