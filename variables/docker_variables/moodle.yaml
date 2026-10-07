@@ -1,0 +1,13 @@
+Variables:
+  MOODLE_CONTAINER_NAME: moodle
+  MOODLE_DATABASE_CONTAINER_NAME: moodle-database
+  MOODLE_IMAGE: erseco/alpine-moodle:v5.2.1
+  MOODLE_DATABASE_IMAGE: postgres:17-alpine
+  MOODLE_RECREATE: true
+  MOODLE_RESTART_POLICY: unless-stopped
+  MOODLE_HOST_PORT: 8082
+  MOODLE_SITE_URL: http://localhost:${MOODLE_HOST_PORT}
+  MOODLE_SITE_NAME: Training_Moodle
+  MOODLE_ADMIN_USERNAME: admin
+  MOODLE_ADMIN_EMAIL: ggadmin@ggsec.org
+  MOODLE_DATA_VOLUME: ${CONTAINER_DATA_ROOT}/moodle-stack

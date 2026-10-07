@@ -1,0 +1,10 @@
+# Editable settings; ${NAME} references are expanded when an action runs.
+Variables:
+  ETHERPAD_CONTAINER_NAME: etherpad
+  ETHERPAD_IMAGE: etherpad/etherpad:latest
+  ETHERPAD_RECREATE: false
+  ETHERPAD_RESTART_POLICY: unless-stopped
+  ETHERPAD_HOST_PORT: 9001
+  ETHERPAD_CONTAINER_PORT: 9001
+  ETHERPAD_DATA_VOLUME: "${CONTAINER_DATA_ROOT}/etherpad"
+  ETHERPAD_DATA_PATH: /opt/etherpad-lite/var

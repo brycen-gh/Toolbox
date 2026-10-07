@@ -1,0 +1,35 @@
+# Capture menu: local Ethernet and Wi-Fi traffic saved as PCAP files.
+title: Capture
+Home:
+  label: Capture
+  icon: network
+  content: |
+    Capture traffic from a local Ethernet or Wi-Fi adapter into a PCAP file.
+    Open Capture Traffic to choose an adapter and output file, then start.
+    Stop Capture finishes the file. Linux and tcpdump are required.
+    Wi-Fi captures traffic visible to the adapter without enabling monitor mode.
+    WSL only exposes its own adapters, not necessarily the Windows physical adapter.
+menu:
+  # ======================================================================
+  # PACKET CAPTURE
+  # ======================================================================
+  - label: Capture Traffic
+    icon: network
+    special: capture_dialog
+    content: Choose an Ethernet or Wi-Fi interface and save its traffic to a PCAP file.
+  # ======================================================================
+  # SETTINGS
+  # ======================================================================
+  - label: Settings
+    icon: settings
+    children:
+      - label: Lock Session Creds
+        action_id: lock_remote_credentials
+        content: Forget the local sudo password held in memory.
+      - label: Show / Hide Items
+        special: menu_visibility
+      - label: About
+        content: |
+          Capture uses tcpdump on Linux, with a sudo prompt when needed.
+          Files are saved locally and existing files are never overwritten.
+          Capture only traffic you are authorized to collect.

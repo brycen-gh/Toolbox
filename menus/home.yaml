@@ -1,0 +1,52 @@
+# Menu layout: labels and children form the sidebar; action_id selects a registered handler.
+# Parameters may reference values from VariablesFile using ${VARIABLE_NAME}.
+title: Home
+VariablesFile: deployment-variables.yaml
+
+menu:
+  # ======================================================================
+  # HOME
+  # ======================================================================
+  - label: Home
+    icon: home
+    home_screen: true
+    content: |
+      Welcome to Toolbox
+
+      Deploy your training lab, open shared services, capture and replay traffic,
+      and troubleshoot Docker and Security Onion systems.
+
+      Lab services
+      ─────────────────────────────
+      Home — A web portal with links to your lab services and getting-started guides.
+      Moodle — The lab's learning platform for courses, resources, and activities.
+      Instructors organize training in courses; learners sign in with their assigned
+      account to open course materials, complete activities, and track progress.
+      OpenProject — Project planning, assigned tasks, and team progress.
+      Etherpad — Shared notes and live collaborative writing. Use your group's pad link.
+      Nextcloud — Shared lab files and resources. Sign in with your assigned account.
+      CTFd — Training challenges, flag submissions, and the scoreboard.
+      Zulip — Team conversations organized into channels and topics. Use your invitation.
+      Portainer — Instructor tools for inspecting and managing lab containers.
+
+      Service availability depends on what your instructor has deployed.
+      Each service uses its own account or access instructions.
+
+      How to use it
+      ─────────────────────────────
+      1. Use the dropdown at the top of the sidebar to switch between different tool collections.
+      2. Click any category to expand or collapse it.
+      3. Click a script to see its description.
+      4. Press the green “Run Script” button to execute it.
+
+      Deploying services
+      ─────────────────────────────
+      Open Deployment → Containers, choose a service, review its Variable Settings,
+      then use its Install action. Moodle's site URL must match the address learners use.
+      After changing portal links, enable HOME_RECREATE and run Install Home again.
+
+      Use Deployment → Backups for manual backup and restore of every service.
+      Container removal is available under Troubleshooting → Container Actions.
+
+      Use Capture for recording traffic, Training for replay and host exercises,
+      and Troubleshooting for diagnostics. Ask your instructor for lab access details.

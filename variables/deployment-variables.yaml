@@ -1,0 +1,16 @@
+# Editable settings; ${NAME} references are expanded when an action runs.
+Variables:
+  CONTAINER_DATA_ROOT: ~/.local/share/yaml-toolbox/containers
+  CONTAINER_IMAGE_ARCHIVE_ROOT: ./repos/containers
+  CONTAINER_IMAGE_PULL_ATTEMPTS: 3
+  BACKUP_DIRECTORY: ./backups
+
+Includes:
+  - docker_variables/home.yaml
+  - docker_variables/zulip.yaml
+  - docker_variables/open_project.yaml
+  - docker_variables/etherpad.yaml
+  - docker_variables/nextcloud.yaml
+  - docker_variables/moodle.yaml
+  - docker_variables/ctfd.yaml
+  - docker_variables/portainer.yaml

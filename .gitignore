@@ -1,0 +1,28 @@
+# The contents of these folders are for local repos. To reduce file size, you can download them yourself.
+repos/*
+backups/
+variables/.service-secrets.json
+run_toolbox.*
+.setup-complete
+__pycache__/
+.venv
+.whats-next.md
+.git-tips
+tests/*
+docs/
+__init__.py
+tests/
+github
+github.pub
+scripts/push-initial.sh
+create-extra-icons.ps1
+copy_local.sh
+
+
+# Keep the Moodle regression tests while retaining existing local test exclusions.
+!tests/
+tests/*
+!tests/test_moodle.py
+!tests/test_ctfd.py
+!tests/test_docker_install.py
+!tests/test_pcap_replay.py
