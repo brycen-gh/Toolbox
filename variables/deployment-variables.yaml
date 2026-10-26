@@ -1,0 +1,21 @@
+Variables:
+  LAB_DOMAIN: ''
+  CONTAINER_DATA_ROOT: ~/.local/share/yaml-toolbox/containers
+  CONTAINER_IMAGE_ARCHIVE_ROOT: ./repos/containers
+  CONTAINER_IMAGE_PULL_ATTEMPTS: 3
+  BACKUP_DIRECTORY: ./backups
+  WSL_FORWARD_DISTRO: auto
+  WSL_FORWARD_PORTS: 80, 443, 8082
+Includes:
+- docker_variables/nginx_proxy.yaml
+- docker_variables/nginx.yaml
+- docker_variables/mattermost.yaml
+- docker_variables/guacamole.yaml
+- docker_variables/home.yaml
+- docker_variables/zulip.yaml
+- docker_variables/open_project.yaml
+- docker_variables/etherpad.yaml
+- docker_variables/nextcloud.yaml
+- docker_variables/moodle.yaml
+- docker_variables/ctfd.yaml
+- docker_variables/portainer.yaml

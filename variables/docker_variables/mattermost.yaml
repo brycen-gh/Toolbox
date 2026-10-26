@@ -1,0 +1,10 @@
+Variables:
+  MATTERMOST_CONTAINER_NAME: mattermost
+  MATTERMOST_DATABASE_CONTAINER_NAME: mattermost-database
+  MATTERMOST_IMAGE: mattermost/mattermost-enterprise-edition:11.7.0
+  MATTERMOST_DATABASE_IMAGE: postgres:18-alpine
+  MATTERMOST_RECREATE: false
+  MATTERMOST_RESTART_POLICY: unless-stopped
+  MATTERMOST_HOST_PORT: 8065
+  MATTERMOST_SITE_URL: http://localhost:8065
+  MATTERMOST_DATA_VOLUME: "${CONTAINER_DATA_ROOT}/mattermost"

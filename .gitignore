@@ -1,0 +1,28 @@
+﻿# Local Python/runtime caches.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Generated packages, setup launchers and host records.
+/build/
+/dist/
+*.spec
+/run_toolbox.*
+/.setup-complete
+/tests/
+
+
+# Offline repositories and user data stay local.
+/repos/*
+/backups/*
+/share/*
+/data/
+/variables/.service-secrets.json
+/variables/known_hosts*
+
+# Personal workspace notes and local publishing credentials.
+/docs/notes/
+/github
+/github.pub
+/scripts/push-initial.sh

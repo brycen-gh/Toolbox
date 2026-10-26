@@ -1,0 +1,4 @@
+Variables:
+  SHARE_DIRECTORY: ./share
+  SHARE_HOST: 0.0.0.0
+  SHARE_PORT: 8123

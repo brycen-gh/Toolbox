@@ -1,0 +1,10 @@
+# Nginx Proxy Manager; the admin interface uses HTTP and should stay on a trusted network.
+Variables:
+  NGINX_CONTAINER_NAME: toolbox-nginx
+  NGINX_IMAGE: jc21/nginx-proxy-manager:2
+  NGINX_RECREATE: false
+  NGINX_RESTART_POLICY: unless-stopped
+  NGINX_HTTP_HOST_PORT: 80
+  NGINX_ADMIN_HOST_PORT: 81
+  NGINX_HTTPS_HOST_PORT: 443
+  NGINX_DATA_VOLUME: ${CONTAINER_DATA_ROOT}/nginx

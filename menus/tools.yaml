@@ -1,0 +1,50 @@
+title: Tools
+VariablesFile: tools-variables.yaml
+Home:
+  label: Tools
+  icon: settings
+  content: |
+    Share local files with a Python HTTP server.
+    Place files in ./share, then open Share Folder and run Start Sharing.
+menu:
+  - label: Share Folder
+    icon: folder
+    children:
+      - label: Open Share Folder
+        icon: folder
+        special: open_share_folder
+        content: View the shared folder and press Open Folder to open it in the system file manager.
+      - label: Start Sharing
+        icon: network
+        action_id: start_share
+        content: |
+          Serve ./share in the background using Python. Creates the folder if needed.
+          Anyone who can reach the server can browse and download its files.
+          No login, encryption, or uploads. Stop Sharing or close Toolbox to stop.
+        parameters:
+          directory: "${SHARE_DIRECTORY}"
+          host: "${SHARE_HOST}"
+          port: "${SHARE_PORT}"
+      - label: Sharing Status
+        icon: information
+        action_id: share_status
+        content: Show the shared folder and server address.
+      - label: Stop Sharing
+        icon: stop
+        action_id: stop_share
+        content: Stop the folder web server.
+      - label: Variable Settings
+        icon: variables
+        special: variables_editor
+        content: Set the shared folder, listening address, and port. Stop and start sharing to apply changes.
+        variable_keys:
+          - SHARE_DIRECTORY
+          - SHARE_HOST
+          - SHARE_PORT
+  - label: Settings
+    icon: settings
+    children:
+      - label: Show / Hide Items
+        special: menu_visibility
+      - label: About
+        content: Folder sharing uses Python's built-in HTTP server and requires no extra packages.

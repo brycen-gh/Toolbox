@@ -1,0 +1,10 @@
+# Automatic HTTP hostname routing; Nginx Proxy Manager remains a separate option.
+Variables:
+  PROXY_CONTAINER_NAME: toolbox-proxy
+  PROXY_IMAGE: nginxproxy/nginx-proxy:1.11-alpine
+  PROXY_RECREATE: false
+  PROXY_RESTART_POLICY: unless-stopped
+  PROXY_HTTP_HOST_PORT: 80
+  PROXY_NETWORK: toolbox-proxy
+  PROXY_DOCKER_SOCKET: /var/run/docker.sock
+  PROXY_DATA_VOLUME: ${CONTAINER_DATA_ROOT}/nginx-proxy
